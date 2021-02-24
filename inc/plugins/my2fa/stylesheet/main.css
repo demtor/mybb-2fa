@@ -1,0 +1,20 @@
+.my2fa__confirm-password { max-width: 300px; margin: 0 auto; }
+.my2fa__confirm-password input[type="password"] { width: 100%; box-sizing: border-box; }
+.my2fa__confirm-password-fields { margin-bottom: 3px; }
+
+.my2fa__button { color: White !important }
+.my2fa__button--activate { background: Green !important; }
+.my2fa__button--deactivate { background: Maroon !important; }
+.my2fa__button--manage { background: Navy !important; }
+.my2fa__button--verify { color: Chocolate !important; font-size: 15px; font-weight: bold; }
+.my2fa__button--link { cursor: pointer; background-color: transparent; border: 0; padding: 0; }
+.my2fa__button--link:focus { outline: 0; }
+.my2fa__cancel-button { margin-right: 10px; font-weight: bold; }
+.my2fa__control-buttons { white-space: nowrap; text-align: center; }
+.my2fa__control-buttons form { display: inline-block; }
+
+.my2fa__verification,
+.my2fa__verification-methods { text-align: center; max-width: 600px; }
+.my2fa__verification { margin: 0 auto; }
+.my2fa__activation p:first-child,
+.my2fa__verification p:first-child { margin-top: 0; }

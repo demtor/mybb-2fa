@@ -1,0 +1,1 @@
+<div><a href="usercp.php?action=my2fa" class="usercp_nav_item usercp_nav_password usercp_nav_my2fa">{$lang->my2fa_title}</a></div>
