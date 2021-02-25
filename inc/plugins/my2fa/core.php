@@ -65,7 +65,7 @@ function hasUserBeenRedirected(): bool
 
 function doesUserHave2faEnabled(int $userId): bool
 {
-    return selectUserHasMy2faField($userId);
+    return $userId && selectUserHasMy2faField($userId);
 }
 
 function isRedirectUrlValid(string $redirectUrl): bool

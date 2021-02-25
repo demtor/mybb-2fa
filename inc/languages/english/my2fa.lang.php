@@ -10,6 +10,7 @@ $l['my2fa_password_confirmed_success'] = "Password succesfully confirmed!";
 $l['my2fa_code_error'] = "Two-factor code verification failed. Please try again.";
 $l['my2fa_verification_blocked_error'] = "You are blocked from logging in for around 5 minutes due to repeated authentication failures.";
 $l['my2fa_xmlhttp_error'] = "Please refresh the page and verify your authentication.";
+$l['my2fa_archive_error'] = "Please return to the full version and verify your authentication.";
 
 $l['my2fa_activate_button'] = "Enable";
 $l['my2fa_deactivate_button'] = "Disable";

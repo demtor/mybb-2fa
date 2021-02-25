@@ -39,6 +39,7 @@ if (!defined('IN_ADMINCP'))
 {
     $plugins->add_hook('global_start', 'my2fa_global_start', -22);
     $plugins->add_hook('xmlhttp', 'my2fa_xmlhttp', -22);
+    $plugins->add_hook('archive_start', 'my2fa_archive_start', -22);
 
     $plugins->add_hook('datahandler_login_complete_end', 'my2fa_datahandler_login_complete_end');
     $plugins->add_hook('misc_start', 'my2fa_misc_start');
@@ -283,9 +284,6 @@ function my2fa_global_start()
 
     $my2faUser = $mybb->user;
 
-    if (!$my2faUser['uid'])
-        return;
-
     if (My2FA\isUserVerificationRequired($my2faUser['uid']))
     {
         #todo: maybe include possible ajax request
@@ -312,13 +310,21 @@ function my2fa_xmlhttp()
 {
     global $mybb, $lang;
 
-    if (!$mybb->user['uid'])
-        return;
-
     if (My2FA\isUserVerificationRequired($mybb->user['uid']))
     {
         My2FA\loadLanguage();
         xmlhttp_error($lang->my2fa_xmlhttp_error);
+    }
+}
+
+function my2fa_archive_start()
+{
+    global $mybb, $lang;
+
+    if (My2FA\isUserVerificationRequired($mybb->user['uid']))
+    {
+        My2FA\loadLanguage();
+        archive_error($lang->my2fa_archive_error);
     }
 }
 
