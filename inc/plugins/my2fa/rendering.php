@@ -6,6 +6,7 @@ function getVerificationForm(array $user, string $verificationUrl, bool $include
 {
     global $mybb, $lang, $theme;
 
+    $output = null;
     $mybb->input['method'] = $mybb->get_input('method');
 
     if (!isset($theme))
@@ -50,17 +51,19 @@ function getVerificationForm(array $user, string $verificationUrl, bool $include
 
             $checkboxInputState = 'checked';
             if (isset($mybb->input['trust_device']) && $mybb->input['trust_device'] !== '1')
+            {
                 $checkboxInputState = null;
+            }
 
             eval('$verificationFormTrustDeviceOption = "' . template('verification_form_trust_device_option') . '";');
         }
 
         $output = $method['className']::handleVerification($user, $verificationUrl, compact(
-           'verificationUrl',
-           'redirectUrl',
-           'redirectUrlQueryStr',
-           'verificationFormButtons',
-           'verificationFormTrustDeviceOption'
+            'verificationUrl',
+            'redirectUrl',
+            'redirectUrlQueryStr',
+            'verificationFormButtons',
+            'verificationFormTrustDeviceOption'
         ));
     }
     else
@@ -71,7 +74,7 @@ function getVerificationForm(array $user, string $verificationUrl, bool $include
         $verificationMethodRows = null;
         foreach ($userMethods as $userMethod)
         {
-            $method = $methods[$userMethod['name']] ?? [];
+            $method = $methods[$userMethod['method_id']] ?? [];
 
             if (!$method)
                 continue;
@@ -92,6 +95,7 @@ function getSetupForm(array $user, string $setupUrl, bool $includeBreadcrumb = T
 {
     global $mybb, $lang, $theme;
 
+    $output = null;
     $mybb->input['method'] = $mybb->get_input('method');
 
     $methods = selectMethods();
@@ -145,13 +149,13 @@ function getSetupForm(array $user, string $setupUrl, bool $includeBreadcrumb = T
             if (!$method['className']::canBeActivated())
                 continue;
 
-            if (!isset($userMethods[$method['publicName']]))
+            if (!isset($userMethods[$method['id']]))
             {
                 eval('$setupMethodRows .= "' . template('setup_methods_row') . '";');
             }
             else
             {
-                $userMethod = $userMethods[$method['publicName']];
+                $userMethod = $userMethods[$method['id']];
 
                 $lang->my2fa_setup_method_activation_date = $lang->sprintf(
                     $lang->my2fa_setup_method_activation_date,

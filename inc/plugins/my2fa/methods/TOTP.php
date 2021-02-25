@@ -37,10 +37,8 @@ class TOTP extends AbstractMethod
         }
         else if (isset($mybb->input['otp']))
         {
-            if (
-                self::isOtpValid($mybb->input['otp'], $userMethod['data']['secret_key']) &&
-                !self::isUserCodeAlreadyUsed($user['uid'], $mybb->input['otp'], 30+120*2)
-            ) {
+            if (self::isUserOtpValid($user['uid'], $mybb->input['otp'], $userMethod['data']['secret_key']))
+            {
                 self::recordSuccessfulAttempt($user['uid'], $mybb->input['otp']);
                 self::completeVerification($user['uid']);
             }
@@ -88,10 +86,8 @@ class TOTP extends AbstractMethod
         {
             $mybb->input['otp'] = str_replace(' ', '', $mybb->input['otp']);
 
-            if (
-                self::isOtpValid($mybb->input['otp'], $sessionStorage['totp_secret_key']) &&
-                !self::isUserCodeAlreadyUsed($user['uid'], $mybb->input['otp'], 30+120*2)
-            ) {
+            if (self::isUserOtpValid($user['uid'], $mybb->input['otp'], $sessionStorage['totp_secret_key']))
+            {
                 \My2FA\deleteFromSessionStorage($session->sid, ['totp_secret_key']);
 
                 self::recordSuccessfulAttempt($user['uid'], $mybb->input['otp']);
@@ -114,13 +110,15 @@ class TOTP extends AbstractMethod
         self::completeDeactivation($user['uid'], $setupUrl);
     }
 
-    private static function isOtpValid(string $otp, string $secretKey): bool
+    private static function isUserOtpValid(int $userId, string $otp, string $secretKey): bool
     {
         $google2fa = new Google2FA();
 
         return
             strlen($otp) === 6 &&
-            $google2fa->verifyKey($secretKey, $otp)
+            is_numeric($otp) &&
+            $google2fa->verifyKey($secretKey, $otp) &&
+            !self::isUserCodeAlreadyUsed($userId, $otp, 30+120*2)
             //|| (int) $otp === 123456 // test
         ;
     }

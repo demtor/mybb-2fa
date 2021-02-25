@@ -87,11 +87,10 @@ function my2fa_install()
     $db->write_query("
         CREATE TABLE IF NOT EXISTS `".TABLE_PREFIX."my2fa_user_methods` (
             `uid` int unsigned NOT NULL,
-            `name` varchar(20) NOT NULL,
+            `method_id` varchar(20) NOT NULL,
             `data` varchar(255) NOT NULL DEFAULT '',
             `activated_on` int unsigned NOT NULL,
-            PRIMARY KEY (`uid`, `name`),
-            KEY `uid_index` (`uid`)
+            PRIMARY KEY (`uid`, `method_id`)
         ) ENGINE=InnoDB" . $db->build_create_table_collation()
     );
 
@@ -102,18 +101,19 @@ function my2fa_install()
             `generated_on` int unsigned NOT NULL DEFAULT 0,
             `expire_on` int unsigned NOT NULL DEFAULT 0,
             PRIMARY KEY (`tid`),
-            KEY `uid_index` (`uid`)
+            KEY `IX_uid` (`uid`)
         ) ENGINE=InnoDB" . $db->build_create_table_collation()
     );
 
     $db->write_query("
         CREATE TABLE IF NOT EXISTS `".TABLE_PREFIX."my2fa_logs` (
+            `id` int unsigned NOT NULL AUTO_INCREMENT,
             `uid` int unsigned NOT NULL,
             `event` varchar(40) NOT NULL,
             `data` varchar(255) NOT NULL DEFAULT '',
             `inserted_on` int unsigned NOT NULL,
-            PRIMARY KEY (`uid`, `inserted_on`),
-            KEY `uid_index` (`uid`)
+            PRIMARY KEY (`id`),
+            KEY `IX_uei` (`uid`, `event`, `inserted_on`)
         ) ENGINE=InnoDB" . $db->build_create_table_collation()
     );
 }
@@ -408,12 +408,7 @@ function my2fa_admin_load()
         //$mybb->input['redirect_url'] ??= My2FA\getCurrentUrl(); // PHP 7.4
         $mybb->input['redirect_url'] = $mybb->input['redirect_url'] ?? My2FA\getCurrentUrl();
 
-        $verificationContent = My2FA\getVerificationForm(
-            $mybb->user,
-            'index.php?action=my2fa',
-            False,
-            False
-        );
+        $verificationContent = My2FA\getVerificationForm($mybb->user, 'index.php?action=my2fa', False, False);
 
         exit(My2FA\getAdminVerificationPage($verificationContent));
     }

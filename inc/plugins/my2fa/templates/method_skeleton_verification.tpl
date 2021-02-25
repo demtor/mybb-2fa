@@ -1,5 +1,5 @@
 {$errors}
-<form action="{$verificationUrl}&method={$method['publicName']}" method="post" class="my2fa__verification my2fa__verification--{$method['publicName']}">
+<form action="{$verificationUrl}&method={$method['id']}" method="post" class="my2fa__verification my2fa__verification--{$method['id']}">
 	<table cellspacing="{$theme['borderwidth']}" cellpadding="{$theme['tablespace']}" border="0" class="tborder">
 		<tr>
 			<td class="thead"><strong>{$lang->my2fa_title} - {$method['definitions']['name']}</strong></td>

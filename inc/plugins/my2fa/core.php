@@ -43,7 +43,7 @@ function isDeviceTrusted(int $userId): bool
         return False;
     }
 
-    $userToken = selectUserToken($userId, $mybb->cookies['my2fa_token']);
+    $userToken = selectUserToken($mybb->cookies['my2fa_token']);
 
     return $userToken && $userToken['expire_on'] > TIME_NOW;
 }
@@ -147,7 +147,7 @@ function passwordConfirmationCheck(string $redirectUrl, int $maxAllowedMinutes):
             if (\validate_password_from_uid($mybb->user['uid'], $mybb->get_input('password')))
             {
                 updateSessionStorage($session->sid, ['password_confirmed_at' => TIME_NOW]);
-                redirect($redirectUrl, $lang->my2fa_password_confirmed_success); // CHECK URL =)
+                redirect($redirectUrl, $lang->my2fa_password_confirmed_success);
             }
             else
             {

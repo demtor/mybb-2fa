@@ -32,6 +32,7 @@ class Skeleton extends AbstractMethod
             }
             else
             {
+                #todo: return here, from before, hasUserReachedMaximumAttempts?
                 self::recordFailedAttempt($user['uid']);
                 $errors = inline_error([$lang->my2fa_code_error]);
             }

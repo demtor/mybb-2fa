@@ -98,13 +98,33 @@ function getDefaultGlobalStylesheetLocations()
     );
 }
 
+function getDataItemsEscaped(array $data): array
+{
+    array_walk_recursive($data, function (&$item)
+    {
+        global $db;
+
+        if (is_numeric($item) || is_bool($item))
+        {
+            $item = (int) $item;
+        }
+        else
+        {
+            $item = $db->escape_string($item);
+        }
+    });
+
+    return $data;
+}
+
 function updateSession(string $sessionId, array $data): void
 {
     global $db, $session;
 
-    $data = array_map([$db, 'escape_string'], $data);
+    $data = getDataItemsEscaped($data);
 
-    $db->update_query('sessions',
+    $db->update_query(
+        'sessions',
         $data,
         "sid = '" . $db->escape_string($sessionId) . "'"
     );
@@ -123,9 +143,10 @@ function updateAdminSession(string $sessionId, array $data): void
 {
     global $db, $admin_session;
 
-    $data = array_map([$db, 'escape_string'], $data);
+    $data = getDataItemsEscaped($data);
 
-    $db->update_query('adminsessions',
+    $db->update_query(
+        'adminsessions',
         $data,
         "sid = '" . $db->escape_string($sessionId) . "'"
     );

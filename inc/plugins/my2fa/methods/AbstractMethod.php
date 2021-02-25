@@ -17,8 +17,16 @@ abstract class AbstractMethod
     }
 
     abstract public static function handleVerification(array $user, string $verificationUrl, array $viewParams = []): string;
-    abstract public static function handleActivation(array $user, string $setupUrl, array $viewParams = []): string;
-    abstract public static function handleDeactivation(array $user, string $setupUrl, array $viewParams = []): string;
+
+    public static function handleActivation(array $user, string $setupUrl, array $viewParams = []): string
+    {
+        return "";
+    }
+
+    public static function handleDeactivation(array $user, string $setupUrl, array $viewParams = []): string
+    {
+        return "";
+    }
 
     public static function handleManagement(array $user, string $setupUrl, array $viewParams = []): string
     {
@@ -54,7 +62,7 @@ abstract class AbstractMethod
             'uid' => $userId,
             'event' => 'failed_attempt',
             'data' => [
-                'method' => static::METHOD_ID
+                'method_id' => static::METHOD_ID
             ]
         ]);
     }
@@ -63,9 +71,10 @@ abstract class AbstractMethod
     {
         $userLogs = \My2FA\selectUserLogs($userId, 'succesful_attempt', $secondsInterval);
 
-        foreach ($userLogs as $userLog) {
+        foreach ($userLogs as $userLog)
+        {
             if (
-                $userLog['data']['method'] == static::METHOD_ID &&
+                $userLog['data']['method_id'] == static::METHOD_ID &&
                 $userLog['data']['code'] == $code
             ) {
                 return True;
@@ -81,7 +90,7 @@ abstract class AbstractMethod
             'uid' => $userId,
             'event' => 'succesful_attempt',
             'data' => [
-                'method' => static::METHOD_ID,
+                'method_id' => static::METHOD_ID,
                 'code' => $code
             ]
         ]);
@@ -120,7 +129,7 @@ abstract class AbstractMethod
         }
     }
 
-    final protected static function completeActivation(int $userId, string $setupUrl, array $methodData = []): void
+    final protected static function completeActivation(int $userId, string $setupUrl, array $userMethodData = []): void
     {
         global $lang;
 
@@ -129,8 +138,8 @@ abstract class AbstractMethod
 
         \My2FA\insertUserMethod([
             'uid' => $userId,
-            'name' => static::METHOD_ID,
-            'data' => $methodData
+            'method_id' => static::METHOD_ID,
+            'data' => $userMethodData
         ]);
         \My2FA\redirect($setupUrl, $lang->my2fa_activated_success);
     }
