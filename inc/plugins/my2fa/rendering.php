@@ -176,6 +176,55 @@ function getSetupForm(array $user, string $setupUrl, bool $includeBreadcrumb = T
             }
         }
 
+        $trustedDevices = null;
+        if (
+            isDeviceTrustingAllowed() &&
+            doesUserHave2faEnabled($user['uid']) &&
+            ($userTokens = selectUserTokens($user['uid']))
+        ) {
+            $currentUserToken = [];
+            $otherUserTokens = $userTokens;
+
+            if (isset($userTokens[$mybb->cookies['my2fa_token']]))
+            {
+                $currentUserToken = $userTokens[$mybb->cookies['my2fa_token']];
+                unset($otherUserTokens[$mybb->cookies['my2fa_token']]);
+            }
+
+            if ($mybb->get_input('remove_trusted_devices') === '1')
+            {
+                verify_post_check($mybb->get_input('my_post_key'));
+
+                if ($mybb->get_input('current') === '1' && $currentUserToken)
+                {
+                    deleteUserTokens($user['uid'], (array) $currentUserToken['tid']);
+                    redirect($setupUrl, $lang->my2fa_current_trusted_device_removed_success);
+                }
+                else if ($mybb->get_input('others') === '1' && $otherUserTokens)
+                {
+                    deleteUserTokens($user['uid'], array_keys($otherUserTokens));
+                    redirect($setupUrl, $lang->my2fa_other_trusted_devices_removed_success);
+                }
+            }
+
+            $currentTrustedDeviceRow = null;
+            if ($currentUserToken)
+            {
+                $lang->my2fa_setup_current_trusted_device = $lang->sprintf(
+                    $lang->my2fa_setup_current_trusted_device,
+                    my_date('relative', $userTokens[$mybb->cookies['my2fa_token']]['expire_on'])
+                );
+
+                eval('$currentTrustedDeviceRow = "' . template('setup_trusted_devices_row_current') . '";');
+            }
+
+            $otherTrustedDevicesRow = null;
+            if ($otherUserTokens)
+                eval('$otherTrustedDevicesRow = "' . template('setup_trusted_devices_row_others') . '";');
+ 
+            eval('$trustedDevices = "' . template('setup_trusted_devices') . '";');
+        }
+
         eval('$output = "' . template('setup_methods') . '";');
     }
 

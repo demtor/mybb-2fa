@@ -267,12 +267,22 @@ function deleteUserMethod(int $userId, string $methodId): void
     );
 }
 
-function deleteUserTokens(int $userId)
+function deleteUserTokens(int $userId, array $tokenIds = [])
 {
-    global $db;
+    global $db, $mybb;
 
-    $db->delete_query('my2fa_tokens', "uid = {$userId}");
-    \my_unsetcookie('my2fa_token');
+    $whereClause = null;
+
+    if ($tokenIds)
+    {
+        $tokenIds = getDataItemsEscaped($tokenIds);
+        $whereClause = " AND tid IN ('" . implode("','", $tokenIds) . "')";
+    }
+
+    $db->delete_query('my2fa_tokens', "uid = {$userId}{$whereClause}");
+
+    if (!$tokenIds || in_array($mybb->cookies['my2fa_token'], $tokenIds))
+        \my_unsetcookie('my2fa_token');
 }
 
 function deleteFromSessionStorage(string $sessionId, array $sessionKeys)

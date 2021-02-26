@@ -7,13 +7,14 @@
 	</tr>
 	{$setupMethodRows}
 </table>
+{$trustedDevices}
 <script>
-	var setupDisableButtons = $('.my2fa__button--deactivate');
-	setupDisableButtons.on('click', function(event) {
-		event.preventDefault();
+	var confirmationButtons = $('[data-my2fa-form-confirm]');
+	confirmationButtons.on('click', function(event) {
 		var form = $(this).closest('form');
+		var message = $(this).data('my2fa-form-confirm');
 
-		MyBB.prompt('{$lang->my2fa_setup_deactivate_confirmation}', {
+		MyBB.prompt(message, {
 			buttons: [
 				{title: yes_confirm, value: true},
 				{title: no_confirm, value: false}
@@ -23,5 +24,7 @@
 					form.submit();
 			}
 		})
+
+		return false;
 	})
 </script>

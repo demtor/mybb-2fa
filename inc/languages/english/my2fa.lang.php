@@ -5,8 +5,10 @@ $l['my2fa_description'] = "Two-factor authentication adds an additional layer of
 
 $l['my2fa_activated_success'] = "Two-factor authentication successfully enabled!";
 $l['my2fa_deactivated_success'] = "Two-factor authentication successfully disabled.";
-$l['my2fa_verified_success'] = "Two-factor authentication succesfully verified!";
-$l['my2fa_password_confirmed_success'] = "Password succesfully confirmed!";
+$l['my2fa_verified_success'] = "Two-factor authentication successfully verified!";
+$l['my2fa_password_confirmed_success'] = "Password successfully confirmed!";
+$l['my2fa_current_trusted_device_removed_success'] = "The current trusted device has been successfully removed!";
+$l['my2fa_other_trusted_devices_removed_success'] = "The other trusted devices have been successfully removed!";
 $l['my2fa_code_error'] = "Two-factor code verification failed. Please try again.";
 $l['my2fa_verification_blocked_error'] = "You are blocked from logging in for around 5 minutes due to repeated authentication failures.";
 $l['my2fa_xmlhttp_error'] = "Please refresh the page and verify your authentication.";
@@ -37,7 +39,15 @@ $l['my2fa_password_confirmation_description'] = "Please verify your identity to 
 
 $l['my2fa_setup'] = "Setup";
 $l['my2fa_setup_method_activation_date'] = "Activated on: {1}";
-$l['my2fa_setup_deactivate_confirmation'] = "Are you sure you wish to disable \"{1}\" two-factor authentication?";
+$l['my2fa_setup_deactivate_confirmation'] = "Are you sure you wish to disable {1} two-factor authentication?";
+$l['my2fa_setup_trusted_devices'] = "Trusted Devices";
+$l['my2fa_setup_trusted_devices_description'] = "Manage your current and other trusted devices.";
+$l['my2fa_setup_current_trusted_device'] = "This device is currently trusted until {1}. This means you will not need to complete two-step verification from this device until then.";
+$l['my2fa_setup_other_trusted_devices'] = "There are other devices currently trusted on your account, if you have lost access to a trusted device it is recommended that you stop trusting that device.";
+$l['my2fa_setup_remove_current_trusted_device'] = "Stop trusting this device";
+$l['my2fa_setup_remove_other_trusted_devices'] = "Stop trusting other devices";
+$l['my2fa_setup_remove_current_trusted_device_confirmation'] = "Are you sure you wish to stop trusting this device?";
+$l['my2fa_setup_remove_other_trusted_devices_confirmation'] = "Are you sure you wish to stop trusting other devices?";
 
 $l['my2fa_verification'] = "Verification";
 $l['my2fa_verification_description'] = "This extra step shows it is really you trying to sign in. Select a method to sign in with.";
