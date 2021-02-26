@@ -32,6 +32,18 @@ function loadUserLanguage(): void
         $lang->load('my2fa', True);
 }
 
+function getMultiOptionscode(string $type, array $options): string
+{
+    $formattedMultiOptionscode = $type;
+
+    foreach ($options as $name => $value)
+    {
+        $formattedMultiOptionscode .= "\n{$name}={$value}";
+    }
+
+    return $formattedMultiOptionscode;
+}
+
 function getCurrentUrl(): ?string
 {
     global $mybb;

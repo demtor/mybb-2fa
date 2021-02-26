@@ -13,7 +13,7 @@
 					{$lang->my2fa_totp_instruction_1}
 					{$lang->my2fa_totp_manual_secret_key_1} <a href="javascript:void(0)" title="{$secretKey}" class="open-secret-code" data-selector="#secret-code" rel="modal:open">{$lang->my2fa_totp_manual_secret_key_2}</a>.
 				</p>
-				<img src="{$qrCode}" width="150" height="150" style="border:20px solid white;margin:15px 0" />
+				{$qrCodeRendered}
 				<p>
 					<strong>{$lang->my2fa_totp_instruction_2}</strong>
 					<br />{$lang->my2fa_totp_instruction_3}

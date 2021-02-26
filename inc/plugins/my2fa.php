@@ -10,8 +10,10 @@ define('MY2FA_ROOT', MYBB_ROOT . 'inc/plugins/my2fa/');
 
 $GLOBALS['my2faAutoload'] = [
     'My2FA\\Methods\\' => 'methods',
+    'BaconQrCode\\' => 'libs/bacon/bacon-qr-code/src',
     'PragmaRX\\Google2FA\\' => 'libs/pragmarx/google2fa/src',
-    'ParagonIE\\ConstantTime\\' => 'libs/paragonie/constant_time_encoding/src'
+    'ParagonIE\\ConstantTime\\' => 'libs/paragonie/constant_time_encoding/src',
+    'DASPRiD\\Enum\\' => 'libs/dasprid/enum/src'
 ];
 
 spl_autoload_register(function ($className)
@@ -205,6 +207,22 @@ function my2fa_activate()
                 'optionscode' => 'text',
                 //'value'       => preg_replace('/\s+/', '-', $mybb->settings['bbname'])
                 'value'       => $mybb->settings['bbname']
+            ],
+            'totp_qr_code_renderer' => [
+                'title'       => 'TOTP: QR Code Renderer',
+                'description' => 'SvgImageBackEnd (suggested) renders SVG files using XMLWriter (libxml); ImagickImageBackEnd renders raster images using the Imagick library.',
+                'optionscode' => My2FA\getMultiOptionscode('radio', [
+                    'svg_image_back_end' => 'SvgImageBackEnd',
+                    'imagick_image_back_end' => 'ImagickImageBackEnd',
+                    'web_api' => 'Web API'
+                ]),
+                'value' => 'svg_image_back_end' 
+            ],
+            'totp_qr_code_web_api' => [
+                'title'       => 'TOTP: QR Code, Web API',
+                'description' => 'If Web API is selected in the QR Code Rendered setting, use {1} to indicate the QR Code URL.',
+                'optionscode' => 'text',
+                'value'       => 'https://api.qrserver.com/v1/create-qr-code/?data={1}'
             ]
         ]
     );
@@ -257,6 +275,9 @@ function my2fa_settings_peekers(&$peekers)
         'new Peeker($(".setting_my2fa_enable_acp_integration"), $("
             #row_setting_my2fa_disable_trust_device_in_acp
         "), 1, true)',
+        'new Peeker($(".setting_my2fa_totp_qr_code_renderer"), $("
+            #row_setting_my2fa_totp_qr_code_web_api
+        "), "web_api", true)'
     ];
 
     $myPeekers = preg_replace('/(?<!new)\s+/', '', $myPeekers);

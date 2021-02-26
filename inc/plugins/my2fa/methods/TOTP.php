@@ -3,6 +3,11 @@
 namespace My2FA\Methods;
 
 use PragmaRX\Google2FA\Google2FA;
+use BaconQrCode\Renderer\ImageRenderer;
+use BaconQrCode\Renderer\Image\ImagickImageBackEnd;
+use BaconQrCode\Renderer\Image\SvgImageBackEnd;
+use BaconQrCode\Renderer\RendererStyle\RendererStyle;
+use BaconQrCode\Writer;
 
 class TOTP extends AbstractMethod
 {
@@ -73,15 +78,6 @@ class TOTP extends AbstractMethod
             ]);
         }
 
-        $qrCodeUrl = $google2fa->getQRCodeUrl(
-            \My2FA\setting('totp_board_name'),
-            $user['username'],
-            $sessionStorage['totp_secret_key']
-        );
-
-        // very temp
-        $qrCode = "https://api.qrserver.com/v1/create-qr-code/?data={$qrCodeUrl}";
-
         if (isset($mybb->input['otp']))
         {
             $mybb->input['otp'] = str_replace(' ', '', $mybb->input['otp']);
@@ -101,6 +97,14 @@ class TOTP extends AbstractMethod
             }
         }
 
+        $qrCodeUrl = $google2fa->getQRCodeUrl(
+            \My2FA\setting('totp_board_name'),
+            $user['username'],
+            $sessionStorage['totp_secret_key']
+        );
+
+        $qrCodeRendered = self::getQrCodeRendered($qrCodeUrl);
+
         eval('$totpActivation = "' . \My2FA\template('method_totp_activation') . '";');
         return $totpActivation;
     }
@@ -108,6 +112,40 @@ class TOTP extends AbstractMethod
     public static function handleDeactivation(array $user, string $setupUrl, array $viewParams = []): string
     {
         self::completeDeactivation($user['uid'], $setupUrl);
+    }
+
+    private static function getQrCodeRendered(string $qrCodeUrl)
+    {
+        $qrCodeRenderer = \My2FA\setting('totp_qr_code_renderer');
+
+        if ($qrCodeRenderer === 'web_api')
+        {
+            $imageSrc = str_replace('{1}', $qrCodeUrl, \My2FA\setting('totp_qr_code_web_api'));
+            $qrCodeRendered = '<img src="' . $imageSrc . '">';
+        }
+        else
+        {
+            $writer = new Writer(
+                new ImageRenderer(
+                    new RendererStyle(200),
+                    $qrCodeRenderer === 'imagick_image_back_end'
+                        ? new ImagickImageBackEnd()
+                        : new SvgImageBackEnd()
+                )
+            );
+
+            if ($qrCodeRenderer === 'imagick_image_back_end')
+            {
+                $imageSrc = 'data:image/png;base64,' . base64_encode($writer->writeString($qrCodeUrl));
+                $qrCodeRendered = '<img src="' . $imageSrc . '">';
+            }
+            else
+            {
+                $qrCodeRendered = $writer->writeString($qrCodeUrl);
+            }
+        }
+
+        return '<div class="my2fa__qr-code">' . $qrCodeRendered . '</div>';
     }
 
     private static function isUserOtpValid(int $userId, string $otp, string $secretKey): bool
