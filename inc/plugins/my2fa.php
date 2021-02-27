@@ -10,10 +10,10 @@ define('MY2FA_ROOT', MYBB_ROOT . 'inc/plugins/my2fa/');
 
 $GLOBALS['my2faAutoload'] = [
     'My2FA\\Methods\\' => 'methods',
-    'BaconQrCode\\' => 'libs/bacon/bacon-qr-code/src',
-    'PragmaRX\\Google2FA\\' => 'libs/pragmarx/google2fa/src',
-    'ParagonIE\\ConstantTime\\' => 'libs/paragonie/constant_time_encoding/src',
-    'DASPRiD\\Enum\\' => 'libs/dasprid/enum/src'
+    'BaconQrCode\\' => 'vendor/bacon/bacon-qr-code/src',
+    'PragmaRX\\Google2FA\\' => 'vendor/pragmarx/google2fa/src',
+    'ParagonIE\\ConstantTime\\' => 'vendor/paragonie/constant_time_encoding/src',
+    'DASPRiD\\Enum\\' => 'vendor/dasprid/enum/src'
 ];
 
 spl_autoload_register(function ($className)
