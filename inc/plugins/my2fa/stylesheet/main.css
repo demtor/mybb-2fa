@@ -21,3 +21,5 @@
 .my2fa__verification p:first-child { margin-top: 0; }
 
 .my2fa__qr-code { margin: 20px 0; }
+
+.my2fa__alert--notified-group { background: #fbefe3; }

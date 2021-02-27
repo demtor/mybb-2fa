@@ -9,6 +9,11 @@ function setting(string $name): string
     return $mybb->settings['my2fa_' . $name];
 }
 
+function csvSetting(string $name): array
+{
+    return array_filter(explode(',', setting($name)));
+}
+
 function template(string $name): string
 {
     global $templates;

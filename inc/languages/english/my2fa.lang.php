@@ -11,8 +11,9 @@ $l['my2fa_current_trusted_device_removed_success'] = "The current trusted device
 $l['my2fa_other_trusted_devices_removed_success'] = "The other trusted devices have been successfully removed!";
 $l['my2fa_code_error'] = "Two-factor code verification failed. Please try again.";
 $l['my2fa_verification_blocked_error'] = "You are blocked from logging in for around 5 minutes due to repeated authentication failures.";
-$l['my2fa_xmlhttp_error'] = "Please refresh the page and verify your authentication.";
-$l['my2fa_archive_error'] = "Please return to the full version and verify your authentication.";
+$l['my2fa_xmlhttp_error'] = "Please refresh the page and verify/activate your two-factor authentication.";
+$l['my2fa_archive_error'] = "Please return to the full version and verify/activate your two-factor authentication.";
+$l['my2fa_admin_cp_error'] = "Please return to the website and activate your two-factor authentication.";
 
 $l['my2fa_activate_button'] = "Enable";
 $l['my2fa_deactivate_button'] = "Disable";
@@ -36,6 +37,7 @@ $l['my2fa_totp_verification'] = "Open the two-factor authentication app on your 
 
 $l['my2fa_password_confirmation'] = "Confirm password";
 $l['my2fa_password_confirmation_description'] = "Please verify your identity to continue.";
+$l['my2fa_global_notified_group_notice'] = "You are advised to <a href=\"usercp.php?action=my2fa\">activate the two-factor authentication</a> on your account for added account security.";
 
 $l['my2fa_setup'] = "Setup";
 $l['my2fa_setup_method_activation_date'] = "Activated on: {1}";
@@ -48,6 +50,7 @@ $l['my2fa_setup_remove_current_trusted_device'] = "Stop trusting this device";
 $l['my2fa_setup_remove_other_trusted_devices'] = "Stop trusting other devices";
 $l['my2fa_setup_remove_current_trusted_device_confirmation'] = "Are you sure you wish to stop trusting this device?";
 $l['my2fa_setup_remove_other_trusted_devices_confirmation'] = "Are you sure you wish to stop trusting other devices?";
+$l['my2fa_setup_forced_group_notice'] = "To continue using this website, you must setup two-factor authentication.";
 
 $l['my2fa_verification'] = "Verification";
 $l['my2fa_verification_description'] = "This extra step shows it is really you trying to sign in. Select a method to sign in with.";

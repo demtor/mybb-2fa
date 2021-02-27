@@ -43,6 +43,7 @@ if (!defined('IN_ADMINCP'))
     $plugins->add_hook('xmlhttp', 'my2fa_xmlhttp', -22);
     $plugins->add_hook('archive_start', 'my2fa_archive_start', -22);
 
+    $plugins->add_hook('global_intermediate', 'my2fa_global_intermediate');
     $plugins->add_hook('datahandler_login_complete_end', 'my2fa_datahandler_login_complete_end');
     $plugins->add_hook('misc_start', 'my2fa_misc_start');
     $plugins->add_hook('usercp_menu_built', 'my2fa_usercp_menu_built');
@@ -136,6 +137,10 @@ function my2fa_uninstall()
         '#' . preg_quote('<!-- my2faUsercpSetupNav -->') . '#i',
         ''
     );
+    find_replace_templatesets('header',
+        '#' . preg_quote('{$notifiedGroupNotice}') . '#i',
+        ''
+    );
 
     if ($db->field_exists('has_my2fa', 'users'))
         $db->drop_column('users', 'has_my2fa');
@@ -201,6 +206,18 @@ function my2fa_activate()
                 'optionscode' => 'text',
                 'value'       => 5
             ],
+            'forced_groups' => [
+                'title'       => 'Forced Groups',
+                'description' => 'Select which user groups are forced to have two-factor authentication activated.',
+                'optionscode' => 'groupselect',
+                'value'       => ''
+            ],
+            'notified_groups' => [
+                'title'       => 'Notified Groups',
+                'description' => 'Select which user groups will be continually notified with a global notice to activate two-factor authentication.',
+                'optionscode' => 'groupselect',
+                'value'       => ''
+            ],
             'totp_board_name' => [
                 'title'       => 'TOTP: QR Code, Board Name',
                 'description' => 'Insert the board name that will be viewed in your user authenticator app.',
@@ -256,6 +273,10 @@ function my2fa_activate()
         '#' . preg_quote('{$changenameop}') . '#i',
         '{$changenameop}<!-- my2faUsercpSetupNav -->'
     );
+    find_replace_templatesets('header',
+        '#' . preg_quote('{$pm_notice}') . '#i',
+        '{$pm_notice}{$notifiedGroupNotice}'
+    );
 }
 
 function my2fa_deactivate()
@@ -303,6 +324,9 @@ function my2fa_global_start()
 {
     global $mybb, $session, $my2faUser;
 
+    if (!$mybb->user['uid'])
+        return;
+
     $my2faUser = $mybb->user;
 
     if (My2FA\isUserVerificationRequired($my2faUser['uid']))
@@ -325,14 +349,22 @@ function my2fa_global_start()
     ) {
         My2FA\setSessionTrusted();
     }
+
+    if (My2FA\isUserForcedToHave2faActivated($mybb->user['uid']))
+        My2FA\redirectToSetup();
 }
 
 function my2fa_xmlhttp()
 {
     global $mybb, $lang;
 
-    if (My2FA\isUserVerificationRequired($mybb->user['uid']))
-    {
+    if (!$mybb->user['uid'])
+        return;
+
+    if (
+        My2FA\isUserVerificationRequired($mybb->user['uid']) ||
+        My2FA\isUserForcedToHave2faActivated($mybb->user['uid'])
+    ) {
         My2FA\loadLanguage();
         xmlhttp_error($lang->my2fa_xmlhttp_error);
     }
@@ -342,10 +374,27 @@ function my2fa_archive_start()
 {
     global $mybb, $lang;
 
-    if (My2FA\isUserVerificationRequired($mybb->user['uid']))
-    {
+    if (!$mybb->user['uid'])
+        return;
+
+    if (
+        My2FA\isUserVerificationRequired($mybb->user['uid']) ||
+        My2FA\isUserForcedToHave2faActivated($mybb->user['uid'])
+    ) {
         My2FA\loadLanguage();
         archive_error($lang->my2fa_archive_error);
+    }
+}
+
+function my2fa_global_intermediate()
+{
+    global $mybb, $lang, $notifiedGroupNotice;
+
+    $notifiedGroupNotice = null;
+    if (My2FA\doesUserNeedsGlobalNotice($mybb->user['uid']))
+    {
+        My2FA\loadLanguage();
+        eval('$notifiedGroupNotice = "' . My2FA\template('global_notice_notified_group') . '";');
     }
 }
 
@@ -397,6 +446,10 @@ function my2fa_usercp_start()
         My2FA\loadLanguage();
         My2FA\passwordConfirmationCheck('usercp.php?action=my2fa', 20);
 
+        $forcedGroupNotice = null;
+        if (My2FA\isUserForcedToHave2faActivated($mybb->user['uid']))
+            eval('$forcedGroupNotice = "' . My2FA\template('setup_notice_forced_group') . '";');
+
         $setupContent = My2FA\getSetupForm($mybb->user, 'usercp.php?action=my2fa');
 
         eval('$usercpSetup = "' . My2FA\template('usercp_setup') . '";');
@@ -426,7 +479,7 @@ function my2fa_build_wol_location(&$wol)
 
 function my2fa_admin_load()
 {
-    global $mybb;
+    global $mybb, $lang, $page;
 
     if (My2FA\isAdminVerificationRequired($mybb->user['uid']))
     {
@@ -444,5 +497,14 @@ function my2fa_admin_load()
         !My2FA\isAdminSessionTrusted()
     ) {
         My2FA\setAdminSessionTrusted();
+    }
+
+    if (My2FA\isUserForcedToHave2faActivated($mybb->user['uid']))
+    {
+        My2FA\loadUserLanguage();
+
+        $page->output_header($lang->access_denied);
+        $page->output_error($lang->my2fa_admin_cp_error);
+        $page->output_footer();
     }
 }

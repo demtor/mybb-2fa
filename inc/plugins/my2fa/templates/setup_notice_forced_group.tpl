@@ -1,0 +1,1 @@
+<div class="my2fa__alert my2fa__alert--forced-group red_alert">{$lang->my2fa_setup_forced_group_notice}</div>

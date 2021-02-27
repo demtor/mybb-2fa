@@ -65,7 +65,7 @@ function hasUserBeenRedirected(): bool
 
 function doesUserHave2faEnabled(int $userId): bool
 {
-    return $userId && selectUserHasMy2faField($userId);
+    return selectUserHasMy2faField($userId);
 }
 
 function isRedirectUrlValid(string $redirectUrl): bool
@@ -78,6 +78,22 @@ function isRedirectUrlValid(string $redirectUrl): bool
     return
         $redirectUrlHost === $boardUrlHost &&
         strpos(parse_url($redirectUrl, PHP_URL_QUERY), 'ajax=') === False
+    ;
+}
+
+function isUserForcedToHave2faActivated(int $userId): bool
+{
+    return
+        !doesUserHave2faEnabled($userId) &&
+        is_member(setting('forced_groups'), $userId)
+    ;
+}
+
+function doesUserNeedsGlobalNotice(int $userId): bool
+{
+    return
+        !doesUserHave2faEnabled($userId) &&
+        is_member(setting('notified_groups'), $userId)
     ;
 }
 
@@ -127,6 +143,20 @@ function redirectToVerification(): void
     $redirectUrlQueryStr = redirectUrlAsQueryString(getCurrentUrl());
 
     redirect("{$mybb->settings['bburl']}/misc.php?action=my2fa{$redirectUrlQueryStr}");
+}
+
+function redirectToSetup(): void
+{
+    global $mybb;
+
+    if (
+        defined('THIS_SCRIPT') &&
+        THIS_SCRIPT === 'usercp.php' &&
+        $mybb->get_input('action') === 'my2fa'
+    )
+        return;
+
+    redirect("{$mybb->settings['bburl']}/usercp.php?action=my2fa");
 }
 
 function passwordConfirmationCheck(string $redirectUrl, int $maxAllowedMinutes): void

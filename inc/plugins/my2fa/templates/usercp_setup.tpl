@@ -9,6 +9,7 @@
 	<tr>
 		{$usercpnav}
 		<td valign="top">
+            {$forcedGroupNotice}
 			{$setupContent}
 		</td>
 	</tr>
