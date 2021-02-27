@@ -10,7 +10,6 @@ Not suggested for production use. In the meantime feedback and suggestions are w
 - recovery codes
 - 2FA email method (send otp via email)
 
-- clean logs, tokens task
 - security warning notifications (disable 2FA method and use of a recovery code)
 - postgresql tables
 - templates caching

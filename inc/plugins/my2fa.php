@@ -59,6 +59,9 @@ else
     //$plugins->add_hook('admin_config_settings_change', 'my2fa_settings_change');
 }
 
+$plugins->add_hook('task_logcleanup', 'my2fa_task_logcleanup');
+$plugins->add_hook('task_usercleanup', 'my2fa_task_usercleanup');
+
 function my2fa_info()
 {
     return [
@@ -507,4 +510,19 @@ function my2fa_admin_load()
         $page->output_error($lang->my2fa_admin_cp_error);
         $page->output_footer();
     }
+}
+
+function my2fa_task_logcleanup()
+{
+    global $db;
+
+    // 1 hour old logs
+    $db->delete_query('my2fa_logs', "inserted_on < " . (TIME_NOW - 60*60));
+}
+
+function my2fa_task_usercleanup()
+{
+    global $db;
+
+    $db->delete_query('my2fa_tokens', 'expire_on < ' . TIME_NOW);
 }
