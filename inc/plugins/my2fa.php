@@ -57,6 +57,9 @@ else
 
     $plugins->add_hook('admin_settings_print_peekers', 'my2fa_settings_peekers');
     //$plugins->add_hook('admin_config_settings_change', 'my2fa_settings_change');
+
+    $plugins->add_hook('admin_tools_do_recount_rebuild', 'my2fa_admin_do_recount_rebuild');
+    $plugins->add_hook('admin_tools_recount_rebuild_output_list', 'my2fa_admin_recount_rebuild_output');
 }
 
 $plugins->add_hook('task_logcleanup', 'my2fa_task_logcleanup');
@@ -526,4 +529,91 @@ function my2fa_task_usercleanup()
     global $db;
 
     $db->delete_query('my2fa_tokens', "expire_on < " . TIME_NOW);
+}
+
+function my2fa_admin_recount_rebuild_output()
+{
+    global $lang, $form, $form_container;
+
+    $form_container->output_cell("
+        <label>Rebuild My2FA (users.has_my2fa)</label>
+        <div class=\"description\">
+            Update user has_my2fa to reflect the correct value. Use it whenever you enable or disable a My2FA method.
+        </div>
+    ");
+	$form_container->output_cell($lang->na);
+	$form_container->output_cell(
+        $form->generate_submit_button($lang->go, ['name' => 'do_rebuild_has_my2fa_values'])
+    );
+
+	$form_container->construct_row();
+}
+
+function my2fa_admin_do_recount_rebuild()
+{
+    global $db, $mybb;
+
+    if (!isset($mybb->input['do_rebuild_has_my2fa_values']))
+        return;
+
+    $methodIdsStr = implode("','", array_column(My2FA\selectMethods(), 'id'));
+
+    if ($methodIdsStr)
+    {
+        /*
+        $db->write_query("
+            UPDATE ".TABLE_PREFIX."users u
+            SET u.has_my2fa = 1
+            WHERE
+                u.has_my2fa = 0 AND
+                EXISTS (
+                    SELECT um.uid
+                    FROM ".TABLE_PREFIX."my2fa_user_methods um
+                    WHERE um.uid = u.uid AND um.method_id IN('{$methodIdsStr}')
+                )
+        ");
+
+        $db->write_query("
+            UPDATE ".TABLE_PREFIX."users u
+            SET u.has_my2fa = 0
+            WHERE
+                u.has_my2fa = 1 AND
+                NOT EXISTS (
+                    SELECT um.uid
+                    FROM ".TABLE_PREFIX."my2fa_user_methods um
+                    WHERE um.uid = u.uid AND um.method_id IN('{$methodIdsStr}')
+                )
+        ");
+        */
+
+        $query = $db->simple_select(
+            'my2fa_user_methods',
+            'DISTINCT uid',
+            "method_id IN ('{$methodIdsStr}')"
+        );
+
+        $validUserIds = [];
+        while ($userMethod = $db->fetch_array($query))
+        {
+            $validUserIds[] = $userMethod['uid'];
+        }
+
+        $validUserIdsStr = implode(',', $validUserIds);
+
+        $db->update_query(
+            'users',
+            ['has_my2fa' => 1],
+            "has_my2fa = 0 AND uid IN ({$validUserIdsStr})"
+        );
+        $db->update_query(
+            'users',
+            ['has_my2fa' => 0],
+            "has_my2fa = 1 AND uid NOT IN ({$validUserIdsStr})"
+        );
+    }
+
+    log_admin_action('my2fa');
+
+    flash_message('The user has_my2fa values have been rebuilt successfully.', 'success');
+    admin_redirect('index.php?module=tools-recount_rebuild');
 }
