@@ -41,55 +41,53 @@ function selectUserMethods(int $userId): array
 
     if (!isset($usersMethods[$userId]))
     {
-        $query = $db->simple_select('my2fa_user_methods', '*', "uid = {$userId}");
-
         $usersMethods[$userId] = [];
-        while ($userMethod = $db->fetch_array($query))
+        $methodIdsStr = implode("','", array_column(selectMethods(), 'id'));
+
+        if ($methodIdsStr)
         {
-            $userMethod['data'] = json_decode($userMethod['data'], True) ?? [];
-            $usersMethods[$userId][$userMethod['method_id']] = $userMethod;
+            $query = $db->simple_select(
+                'my2fa_user_methods',
+                '*',
+                "uid = {$userId} AND method_id IN ('{$methodIdsStr}')"
+            );
+
+            while ($userMethod = $db->fetch_array($query))
+            {
+                $userMethod['data'] = json_decode($userMethod['data'], True) ?? [];
+                $usersMethods[$userId][$userMethod['method_id']] = $userMethod;
+            }
         }
     }
 
     return $usersMethods[$userId];
 }
 
-function selectUserToken(string $tokenId)
+function selectUserTokens(int $userId, array $tokenIds = []): array
 {
     global $db;
-    static $usersToken;
 
-    if (!isset($usersToken[$tokenId]))
+    $whereClause = null;
+
+    if ($tokenIds)
     {
-        $query = $db->simple_select(
-            'my2fa_tokens',
-            '*',
-            "tid = '" . $db->escape_string($tokenId) . "'"
-        );
-
-        $usersToken[$tokenId] = $db->fetch_array($query) ?? [];
+        $tokenIds = getDataItemsEscaped($tokenIds);
+        $whereClause = " AND tid IN ('" . implode("','", $tokenIds) . "')";
     }
 
-    return $usersToken[$tokenId];
-}
+    $query = $db->simple_select(
+        'my2fa_tokens',
+        '*',
+        "uid = {$userId}{$whereClause} AND expire_on > " . TIME_NOW
+    );
 
-function selectUserTokens(int $userId): array
-{
-    global $db;
-    static $usersTokens;
-
-    if (!isset($usersTokens[$userId]))
+    $userTokens = [];
+    while ($userToken = $db->fetch_array($query))
     {
-        $query = $db->simple_select('my2fa_tokens', '*', "uid = {$userId}");
-
-        $usersTokens[$userId] = [];
-        while ($userToken = $db->fetch_array($query))
-        {
-            $usersTokens[$userId][$userToken['tid']] = $userToken;
-        }
+        $userTokens[$userToken['tid']] = $userToken;
     }
 
-    return $usersTokens[$userId];
+    return $userTokens;
 }
 
 function selectUserLogs(int $userId, string $event, int $secondsInterval): array

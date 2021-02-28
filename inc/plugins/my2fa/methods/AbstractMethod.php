@@ -52,7 +52,7 @@ abstract class AbstractMethod
     {
         return
             count(\My2FA\selectUserLogs($userId, 'failed_attempt', 60*5))
-            >= \My2FA\setting('max_attempts')
+            >= \My2FA\setting('max_verification_attempts')
         ;
     }
 

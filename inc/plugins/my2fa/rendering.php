@@ -15,6 +15,9 @@ function getVerificationForm(array $user, string $verificationUrl, bool $include
     $methods = selectMethods();
     $userMethods = selectUserMethods($user['uid']);
 
+    // here I can add a check that if usermethods is empty, skip verification
+    // but this should not happen if has_my2fa is correctly rebuilt every time
+
     $redirectUrl = htmlspecialchars_uni($mybb->get_input('redirect_url'));
     $redirectUrlQueryStr = htmlspecialchars_uni(
         redirectUrlAsQueryString(urldecode($mybb->get_input('redirect_url')))
@@ -42,11 +45,11 @@ function getVerificationForm(array $user, string $verificationUrl, bool $include
         {
             $lang->my2fa_verification_trust_device = $lang->sprintf(
                 $lang->my2fa_verification_trust_device,
-                setting('trust_device_duration_in_days')
+                setting('device_trusting_duration_in_days')
             );
             $lang->my2fa_verification_trust_device_description = $lang->sprintf(
                 $lang->my2fa_verification_trust_device_description,
-                setting('trust_device_duration_in_days')
+                setting('device_trusting_duration_in_days')
             );
 
             $checkboxInputState = 'checked';
@@ -74,10 +77,7 @@ function getVerificationForm(array $user, string $verificationUrl, bool $include
         $verificationMethodRows = null;
         foreach ($userMethods as $userMethod)
         {
-            $method = $methods[$userMethod['method_id']] ?? [];
-
-            if (!$method)
-                continue;
+            $method = $methods[$userMethod['method_id']];
 
             eval('$verificationMethodRows .= "' . template('verification_methods_row') . '";');
         }
@@ -182,14 +182,11 @@ function getSetupForm(array $user, string $setupUrl, bool $includeBreadcrumb = T
             doesUserHave2faEnabled($user['uid']) &&
             ($userTokens = selectUserTokens($user['uid']))
         ) {
-            $currentUserToken = [];
+            $currentUserToken = $userTokens[$mybb->cookies['my2fa_token']] ?? [];
             $otherUserTokens = $userTokens;
 
-            if (isset($userTokens[$mybb->cookies['my2fa_token']]))
-            {
-                $currentUserToken = $userTokens[$mybb->cookies['my2fa_token']];
-                unset($otherUserTokens[$mybb->cookies['my2fa_token']]);
-            }
+            if ($currentUserToken)
+                unset($otherUserTokens[$currentUserToken['tid']]);
 
             if ($mybb->get_input('remove_trusted_devices') === '1')
             {
@@ -202,7 +199,7 @@ function getSetupForm(array $user, string $setupUrl, bool $includeBreadcrumb = T
                 }
                 else if ($mybb->get_input('others') === '1' && $otherUserTokens)
                 {
-                    deleteUserTokens($user['uid'], array_keys($otherUserTokens));
+                    deleteUserTokens($user['uid'], array_column($otherUserTokens, 'tid'));
                     redirect($setupUrl, $lang->my2fa_other_trusted_devices_removed_success);
                 }
             }

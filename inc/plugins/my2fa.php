@@ -179,14 +179,14 @@ function my2fa_activate()
         'My2FA',
         'Manage settings for the two-factor authentication of users.',
         [
-            'enable_trust_device' => [
-                'title'       => 'Enable Trust Device',
+            'enable_device_trusting' => [
+                'title'       => 'Enable Device Trusting',
                 'description' => 'Allow users to trust their device (browser) during verificaton through a checkbox.',
                 'optionscode' => 'yesno',
                 'value'       => 1
             ],
-            'trust_device_duration_in_days' => [
-                'title'       => 'Trust Device Duration (days)',
+            'device_trusting_duration_in_days' => [
+                'title'       => 'Device Trusting Duration (days)',
                 'description' => 'For how many days can the device be remembered?',
                 'optionscode' => 'numeric',
                 'value'       => 30
@@ -197,27 +197,27 @@ function my2fa_activate()
                 'optionscode' => 'yesno',
                 'value'       => 1
             ],
-            'disable_trust_device_in_acp' => [
-                'title'       => 'Disable Trust Device in ACP',
+            'disable_device_trusting_in_acp' => [
+                'title'       => 'Disable Device Trusting in ACP',
                 'description' => 'Disable device trusting for the admin panel, if enabled.',
                 'optionscode' => 'yesno',
                 'value'       => 1
             ],
-            'max_attempts' => [
-                'title'       => 'Maximum Attempts',
-                'description' => 'Maximum number of incorrect attempts before the user is blocked for 5 minutes',
+            'max_verification_attempts' => [
+                'title'       => 'Maximum Verification Attempts',
+                'description' => 'Max number of incorrect attempts before the user is blocked for <strong>5 minutes</strong> during 2FA verification.',
                 'optionscode' => 'text',
                 'value'       => 5
             ],
             'forced_groups' => [
                 'title'       => 'Forced Groups',
-                'description' => 'Select which user groups are forced to have two-factor authentication activated.',
+                'description' => 'Select which user groups are forced to have 2FA activated.',
                 'optionscode' => 'groupselect',
                 'value'       => ''
             ],
             'notified_groups' => [
                 'title'       => 'Notified Groups',
-                'description' => 'Select which user groups will be continually notified with a global notice to activate two-factor authentication.',
+                'description' => 'Select which user groups will be continually notified with a global notice to activate 2FA.',
                 'optionscode' => 'groupselect',
                 'value'       => ''
             ],
@@ -240,7 +240,7 @@ function my2fa_activate()
             ],
             'totp_qr_code_web_api' => [
                 'title'       => 'TOTP: QR Code, Web API',
-                'description' => 'If Web API is selected in the QR Code Rendered setting, use {1} to indicate the QR Code URL.',
+                'description' => 'If Web API is selected in the QR Code Renderer setting, use {1} to indicate the QR Code URL.',
                 'optionscode' => 'text',
                 'value'       => 'https://api.qrserver.com/v1/create-qr-code/?data={1}'
             ]
@@ -293,11 +293,11 @@ function my2fa_deactivate()
 function my2fa_settings_peekers(&$peekers)
 {
     $myPeekers = [
-        'new Peeker($(".setting_my2fa_enable_trust_device"), $("
-            #row_setting_my2fa_trust_device_duration_in_days
+        'new Peeker($(".setting_my2fa_enable_device_trusting"), $("
+            #row_setting_my2fa_device_trusting_duration_in_days
         "), 1, true)',
         'new Peeker($(".setting_my2fa_enable_acp_integration"), $("
-            #row_setting_my2fa_disable_trust_device_in_acp
+            #row_setting_my2fa_disable_device_trusting_in_acp
         "), 1, true)',
         'new Peeker($(".setting_my2fa_totp_qr_code_renderer"), $("
             #row_setting_my2fa_totp_qr_code_web_api
@@ -391,7 +391,8 @@ function my2fa_archive_start()
 
 function my2fa_global_intermediate()
 {
-    global $mybb, $lang, $notifiedGroupNotice;
+    global $mybb, $lang,
+    $notifiedGroupNotice;
 
     $notifiedGroupNotice = null;
     if (My2FA\doesUserNeedsGlobalNotice($mybb->user['uid']))
@@ -524,5 +525,5 @@ function my2fa_task_usercleanup()
 {
     global $db;
 
-    $db->delete_query('my2fa_tokens', 'expire_on < ' . TIME_NOW);
+    $db->delete_query('my2fa_tokens', "expire_on < " . TIME_NOW);
 }

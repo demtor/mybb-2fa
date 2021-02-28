@@ -43,16 +43,16 @@ function isDeviceTrusted(int $userId): bool
         return False;
     }
 
-    $userToken = selectUserToken($mybb->cookies['my2fa_token']);
+    $userToken = selectUserTokens($userId, (array) $mybb->cookies['my2fa_token']);
 
-    return $userToken && $userToken['expire_on'] > TIME_NOW;
+    return (bool) $userToken;
 }
 
 function isDeviceTrustingAllowed(): bool
 {
     return
-        setting('enable_trust_device') &&
-        (!defined('IN_ADMINCP') || !setting('disable_trust_device_in_acp'))
+        setting('enable_device_trusting') &&
+        (!defined('IN_ADMINCP') || !setting('disable_device_trusting_in_acp'))
     ;
 }
 
@@ -119,7 +119,7 @@ function setDeviceTrusted(int $userId): void
 {
     global $mybb;
 
-    $expirationTime = setting('trust_device_duration_in_days') * 60*60*24 + TIME_NOW;
+    $expirationTime = setting('device_trusting_duration_in_days') * 60*60*24 + TIME_NOW;
 
     $userTokenResult = insertUserToken([
         'uid' => $userId,

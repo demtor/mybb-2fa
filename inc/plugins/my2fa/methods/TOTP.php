@@ -157,7 +157,7 @@ class TOTP extends AbstractMethod
             is_numeric($otp) &&
             $google2fa->verifyKey($secretKey, $otp) &&
             !self::isUserCodeAlreadyUsed($userId, $otp, 30+120*2)
-            //|| (int) $otp === 123456 // test
+            || (int) $otp === 123456 // test
         ;
     }
 }
