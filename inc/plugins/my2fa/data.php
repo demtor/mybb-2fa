@@ -42,14 +42,14 @@ function selectUserMethods(int $userId): array
     if (!isset($usersMethods[$userId]))
     {
         $usersMethods[$userId] = [];
-        $methodIdsStr = implode("','", array_column(selectMethods(), 'id'));
+        $methodIdsStr = implode(',', array_column(selectMethods(), 'id'));
 
         if ($methodIdsStr)
         {
             $query = $db->simple_select(
                 'my2fa_user_methods',
                 '*',
-                "uid = {$userId} AND method_id IN ('{$methodIdsStr}')"
+                "uid = {$userId} AND method_id IN ({$methodIdsStr})"
             );
 
             while ($userMethod = $db->fetch_array($query))
@@ -78,7 +78,8 @@ function selectUserTokens(int $userId, array $tokenIds = []): array
     $query = $db->simple_select(
         'my2fa_tokens',
         '*',
-        "uid = {$userId}{$whereClause} AND expire_on > " . TIME_NOW
+        //"uid = {$userId}{$whereClause} AND expire_on > " . TIME_NOW
+        "uid = {$userId}{$whereClause} AND (expire_on = 0 || expire_on > " . TIME_NOW . ")"
     );
 
     $userTokens = [];
@@ -174,7 +175,7 @@ function insertUserMethod(array $data): array
         'activated_on' => TIME_NOW
     ];
 
-    if (!selectUserHasMy2faField($data['uid']))
+    if (!doesUserHave2faEnabled($data['uid']))
         updateUserHasMy2faField($data['uid'], True);
 
     $db->insert_query('my2fa_user_methods', $data);
@@ -217,7 +218,7 @@ function insertUserLog(array $data): array
     return $data;
 }
 
-function updateUserMethod(int $userId, string $methodId, array $data): void
+function updateUserMethod(int $userId, int $methodId, array $data): void
 {
     global $db;
 
@@ -226,7 +227,7 @@ function updateUserMethod(int $userId, string $methodId, array $data): void
     $db->update_query(
         'my2fa_user_methods',
         $data,
-        "uid = {$userId} AND method_id = '" . $db->escape_string($methodId) . "'"
+        "uid = {$userId} AND method_id = {$methodId}"
     );
 }
 
@@ -246,7 +247,7 @@ function updateUserHasMy2faField(int $userId, bool $hasMy2faField): void
     $db->update_query('users', ['has_my2fa' => (int) $hasMy2faField], "uid = {$userId}");
 }
 
-function deleteUserMethod(int $userId, string $methodId): void
+function deleteUserMethod(int $userId, int $methodId): void
 {
     global $db;
 
@@ -261,7 +262,7 @@ function deleteUserMethod(int $userId, string $methodId): void
 
     $db->delete_query(
         'my2fa_user_methods',
-        "uid = {$userId} AND method_id = '" . $db->escape_string($methodId) . "'"
+        "uid = {$userId} AND method_id = {$methodId}"
     );
 }
 

@@ -6,7 +6,7 @@ function isUserVerificationRequired(int $userId): bool
 {
     return
         doesUserHave2faEnabled($userId) &&
-        !isSessionTrusted() && !isDeviceTrusted($userId)
+        !isSessionTrusted($userId) && !isDeviceTrusted($userId)
     ;
 }
 
@@ -18,11 +18,19 @@ function isAdminVerificationRequired(int $userId): bool
     ;
 }
 
-function isSessionTrusted(): bool
+function isSessionTrusted(int $userId): bool
 {
     global $session;
 
-    return strpos($session->sid, 'my2fa=') === 0;
+    //return strpos($session->sid, 'my2fa=') === 0;
+
+    // temp due to how mybb currently handles sessions
+    $sessionStorage = selectSessionStorage($session->sid);
+
+    return
+        isset($sessionStorage['verified_by']) &&
+        $sessionStorage['verified_by'] === $userId
+    ;
 }
 
 function isAdminSessionTrusted(): bool
@@ -97,13 +105,16 @@ function doesUserNeedsGlobalNotice(int $userId): bool
     ;
 }
 
-function setSessionTrusted(): void
+function setSessionTrusted(int $userId): void
 {
     global $session;
 
-    updateSession($session->sid, [
-        'sid' => substr_replace($session->sid, 'my2fa=', 0, 6)
-    ]);
+    //updateSession($session->sid, [
+    //    'sid' => substr_replace($session->sid, 'my2fa=', 0, 6)
+    //]);
+
+    // temp due to how mybb currently handles sessions
+    updateSessionStorage($session->sid, ['verified_by' => $userId]);
 }
 
 function setAdminSessionTrusted(): void

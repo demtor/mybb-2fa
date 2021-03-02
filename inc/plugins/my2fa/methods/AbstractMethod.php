@@ -123,7 +123,7 @@ abstract class AbstractMethod
         }
         else
         {
-            \My2FA\setSessionTrusted();
+            \My2FA\setSessionTrusted($userId);
 
             \My2FA\redirect($redirectUrl, $lang->my2fa_verified_success);
         }
@@ -133,8 +133,8 @@ abstract class AbstractMethod
     {
         global $lang;
 
-        if (!\My2FA\isSessionTrusted())
-            \My2FA\setSessionTrusted();
+        if (!\My2FA\isSessionTrusted($userId))
+            \My2FA\setSessionTrusted($userId);
 
         \My2FA\insertUserMethod([
             'uid' => $userId,

@@ -8,13 +8,14 @@ if (!defined('PLUGINLIBRARY'))
 
 define('MY2FA_ROOT', MYBB_ROOT . 'inc/plugins/my2fa/');
 
+$my2faComposerAutoload = require MY2FA_ROOT . 'vendor/composer/autoload_psr4.php';
+array_walk($my2faComposerAutoload, function (&$path) {
+    $path = strstr($path[0], 'vendor');
+});
+
 $GLOBALS['my2faAutoload'] = [
     'My2FA\\Methods\\' => 'methods',
-    'BaconQrCode\\' => 'vendor/bacon/bacon-qr-code/src',
-    'PragmaRX\\Google2FA\\' => 'vendor/pragmarx/google2fa/src',
-    'ParagonIE\\ConstantTime\\' => 'vendor/paragonie/constant_time_encoding/src',
-    'DASPRiD\\Enum\\' => 'vendor/dasprid/enum/src'
-];
+] + $my2faComposerAutoload;
 
 spl_autoload_register(function ($className)
 {
@@ -62,15 +63,15 @@ else
     $plugins->add_hook('admin_tools_recount_rebuild_output_list', 'my2fa_admin_recount_rebuild_output');
 }
 
-$plugins->add_hook('task_logcleanup', 'my2fa_task_logcleanup');
-$plugins->add_hook('task_usercleanup', 'my2fa_task_usercleanup');
+$plugins->add_hook('task_hourlycleanup', 'my2fa_task_hourlycleanup');
+$plugins->add_hook('task_dailycleanup_end', 'my2fa_task_dailycleanup');
 
 function my2fa_info()
 {
     return [
         'name'          => 'My2FA',
         'description'   => 'Two-factor authentication for added account security.',
-        'website'       => 'https://github.com/demtor/MyBB-My2FA',
+        'website'       => 'https://github.com/demtor/mybb-2fa',
         'author'        => 'demtor',
         'authorsite'    => 'https://github.com/demtor',
         'version'       => '1.0-alpha',
@@ -97,7 +98,7 @@ function my2fa_install()
     $db->write_query("
         CREATE TABLE IF NOT EXISTS `".TABLE_PREFIX."my2fa_user_methods` (
             `uid` int unsigned NOT NULL,
-            `method_id` varchar(20) NOT NULL,
+            `method_id` tinyint NOT NULL,
             `data` varchar(255) NOT NULL DEFAULT '',
             `activated_on` int unsigned NOT NULL,
             PRIMARY KEY (`uid`, `method_id`)
@@ -335,7 +336,7 @@ function my2fa_global_start()
 
     $my2faUser = $mybb->user;
 
-    if (My2FA\isUserVerificationRequired($my2faUser['uid']))
+    if (My2FA\isUserVerificationRequired($mybb->user['uid']))
     {
         #todo: maybe include possible ajax request
         if (!My2FA\hasUserBeenRedirected())
@@ -350,10 +351,10 @@ function my2fa_global_start()
         $mybb->post_code = generate_post_check();
     }
     else if (
-        My2FA\doesUserHave2faEnabled($my2faUser['uid']) &&
-        !My2FA\isSessionTrusted()
+        My2FA\doesUserHave2faEnabled($mybb->user['uid']) &&
+        !My2FA\isSessionTrusted($mybb->user['uid'])
     ) {
-        My2FA\setSessionTrusted();
+        My2FA\setSessionTrusted($mybb->user['uid']);
     }
 
     if (My2FA\isUserForcedToHave2faActivated($mybb->user['uid']))
@@ -396,6 +397,9 @@ function my2fa_global_intermediate()
 {
     global $mybb, $lang,
     $notifiedGroupNotice;
+
+    if (!$mybb->user['uid'])
+        return;
 
     $notifiedGroupNotice = null;
     if (My2FA\doesUserNeedsGlobalNotice($mybb->user['uid']))
@@ -516,7 +520,7 @@ function my2fa_admin_load()
     }
 }
 
-function my2fa_task_logcleanup()
+function my2fa_task_hourlycleanup()
 {
     global $db;
 
@@ -524,7 +528,7 @@ function my2fa_task_logcleanup()
     $db->delete_query('my2fa_logs', "inserted_on < " . (TIME_NOW - 60*60));
 }
 
-function my2fa_task_usercleanup()
+function my2fa_task_dailycleanup()
 {
     global $db;
 
@@ -541,12 +545,12 @@ function my2fa_admin_recount_rebuild_output()
             Update user has_my2fa to reflect the correct value. Use it whenever you enable or disable a My2FA method.
         </div>
     ");
-	$form_container->output_cell($lang->na);
-	$form_container->output_cell(
+    $form_container->output_cell($lang->na);
+    $form_container->output_cell(
         $form->generate_submit_button($lang->go, ['name' => 'do_rebuild_has_my2fa_values'])
     );
 
-	$form_container->construct_row();
+    $form_container->construct_row();
 }
 
 function my2fa_admin_do_recount_rebuild()

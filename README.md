@@ -10,11 +10,8 @@ Not suggested for production use. In the meantime feedback and suggestions are w
 - recovery codes
 - 2FA email method (send otp via email)
 
-- security warning notifications (disable 2FA method and use of a recovery code)
 - postgresql tables
 - templates caching
-- consider maybe rebuild option for boolean has_my2fa based on usable methods to use until acp management will be available (if will be)
-- method id numeric???
 - hooks
 ```
 

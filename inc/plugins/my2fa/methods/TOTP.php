@@ -11,7 +11,7 @@ use BaconQrCode\Writer;
 
 class TOTP extends AbstractMethod
 {
-    public const METHOD_ID = 'totp';
+    public const METHOD_ID = 1;
 
     protected static $definitions = [];
 

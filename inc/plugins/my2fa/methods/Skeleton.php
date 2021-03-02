@@ -4,7 +4,7 @@ namespace My2FA\Methods;
 
 class Skeleton extends AbstractMethod
 {
-    public const METHOD_ID = 'skeleton';
+    public const METHOD_ID = 0;
 
     protected static $definitions = [
         'name' => 'Skeleton',

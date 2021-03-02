@@ -13,8 +13,8 @@ package_file_extensions_blacklist = ('yml', 'xml', 'dist', 'json', 'lock', 'neon
 # dir: regex_filename
 specific_paths_blacklist = {
     '': r'^autoload\.php$',
-    'composer': r'^(?!installed\.json).*$',
-    'paragonie/constant_time_encoding/src': r'^(?!(?:Base32|EncoderInterface|Binary)\.php).*$'
+    'composer': r'^(?!installed\.json|autoload_psr4\.php).*$',
+    #'paragonie/constant_time_encoding/src': r'^(?!(?:Base32|EncoderInterface|Binary)\.php).*$'
 }
 
 dirs_to_remove = []
