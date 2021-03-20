@@ -1,25 +1,30 @@
-.my2fa__confirm-password { max-width: 300px; margin: 0 auto; }
-.my2fa__confirm-password input[type="password"] { width: 100%; box-sizing: border-box; }
-.my2fa__confirm-password-fields { margin-bottom: 3px; }
-
-.my2fa__control-buttons { white-space: nowrap; text-align: center; }
-.my2fa__control-buttons form { display: inline-block; }
-.my2fa__button { color: White !important }
-.my2fa__button--activate { background: Green !important; }
-.my2fa__button--deactivate { background: Maroon !important; }
-.my2fa__button--manage { background: Navy !important; }
-.my2fa__button--verify { color: Chocolate !important; font-size: 15px; font-weight: bold; }
-.my2fa__button--link { cursor: pointer; background-color: transparent; border: 0; padding: 0; }
-.my2fa__button--link:focus { outline: 0; }
-.my2fa__cancel-button { margin-right: 10px; font-weight: bold; }
-.my2fa__remove-trusted-devices-button { display: table !important; margin: 5px 0 0 0 !important; }
-
 .my2fa__verification,
 .my2fa__verification-methods { text-align: center; max-width: 600px; }
 .my2fa__verification { margin: 0 auto; }
 .my2fa__activation p:first-child,
 .my2fa__verification p:first-child { margin-top: 0; }
 
-.my2fa__qr-code { margin: 20px 0; }
+.my2fa__method-controls { white-space: nowrap; text-align: center; }
+.my2fa__method-controls form { display: inline-block; }
+.my2fa__method-button { color: White !important }
+.my2fa__method-button--activate { background: Green !important; }
+.my2fa__method-button--deactivate { background: Maroon !important; }
+.my2fa__method-button--manage { background: Navy !important; }
+.my2fa__method-button--verify { color: Chocolate !important; font-size: 15px; font-weight: bold; }
+.my2fa__method-button--link { cursor: pointer; background-color: transparent; border: 0; padding: 0; }
+.my2fa__method-button--link:focus { outline: 0; }
 
-.my2fa__alert--notified-group { background: #fbefe3; }
+.my2fa__cancel-button { margin-right: 10px; font-weight: bold; }
+.my2fa__remove-trusted-devices-button { display: table !important; margin: 5px 0 0 0 !important; }
+
+.my2fa__other-trusted-devices-log { border: 1px solid Orange; text-align: center; margin: 15px; }
+.my2fa__other-trusted-devices-log caption { background-color: Orange; white-space: nowrap; }
+.my2fa__other-trusted-devices-log th,
+.my2fa__other-trusted-devices-log td { padding: 0 10px; }
+.my2fa__other-trusted-devices-log td { font-family: monospace; }
+
+.my2fa__password-confirmation { max-width: 300px; margin: 0 auto; }
+.my2fa__password-confirmation input[type="password"] { width: 100%; box-sizing: border-box; }
+.my2fa__password-confirmation-fields { margin-bottom: 3px; }
+
+.my2fa__qr-code { margin: 20px 0; }

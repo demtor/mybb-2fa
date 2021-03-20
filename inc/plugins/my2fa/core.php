@@ -6,7 +6,7 @@ function isUserVerificationRequired(int $userId): bool
 {
     return
         doesUserHave2faEnabled($userId) &&
-        !isSessionTrusted($userId) && !isDeviceTrusted($userId)
+        !isSessionTrusted() && !isUserDeviceTrusted($userId)
     ;
 }
 
@@ -14,11 +14,11 @@ function isAdminVerificationRequired(int $userId): bool
 {
     return
         doesUserHave2faEnabled($userId) &&
-        !isAdminSessionTrusted() && !isDeviceTrusted($userId)
+        !isAdminSessionTrusted() && !isUserDeviceTrusted($userId)
     ;
 }
 
-function isSessionTrusted(int $userId): bool
+function isSessionTrusted(): bool
 {
     global $session;
 
@@ -29,7 +29,7 @@ function isSessionTrusted(int $userId): bool
 
     return
         isset($sessionStorage['verified_by']) &&
-        $sessionStorage['verified_by'] === $userId
+        $sessionStorage['verified_by'] === $session->uid
     ;
 }
 
@@ -40,7 +40,7 @@ function isAdminSessionTrusted(): bool
     return strpos($admin_session['sid'], 'my2fa=') === 0;
 }
 
-function isDeviceTrusted(int $userId): bool
+function isUserDeviceTrusted(int $userId): bool
 {
     global $mybb;
 
@@ -53,7 +53,7 @@ function isDeviceTrusted(int $userId): bool
 
     $userToken = selectUserTokens($userId, (array) $mybb->cookies['my2fa_token']);
 
-    return (bool) $userToken;
+    return !empty($userToken);
 }
 
 function isDeviceTrustingAllowed(): bool
@@ -68,7 +68,7 @@ function hasUserBeenRedirected(): bool
 {
     global $session;
 
-    return selectSessionStorage($session->sid)['is_redirected'] ?? False;
+    return selectSessionStorage($session->sid)['redirected'] ?? False;
 }
 
 function doesUserHave2faEnabled(int $userId): bool
@@ -91,21 +91,23 @@ function isRedirectUrlValid(string $redirectUrl): bool
 
 function isUserForcedToHave2faActivated(int $userId): bool
 {
+    global $mybb;
+
     return
+        (
+            !defined('THIS_SCRIPT') ||
+            !(
+                THIS_SCRIPT === 'member.php' &&
+                $mybb->get_input('action') === 'logout' &&
+                $mybb->get_input('logoutkey') === $mybb->user['logoutkey']
+            )
+        ) &&
         !doesUserHave2faEnabled($userId) &&
         is_member(setting('forced_groups'), $userId)
     ;
 }
 
-function doesUserNeedsGlobalNotice(int $userId): bool
-{
-    return
-        !doesUserHave2faEnabled($userId) &&
-        is_member(setting('notified_groups'), $userId)
-    ;
-}
-
-function setSessionTrusted(int $userId): void
+function setSessionTrusted(): void
 {
     global $session;
 
@@ -114,7 +116,7 @@ function setSessionTrusted(int $userId): void
     //]);
 
     // temp due to how mybb currently handles sessions
-    updateSessionStorage($session->sid, ['verified_by' => $userId]);
+    updateSessionStorage($session->sid, ['verified_by' => $session->uid]);
 }
 
 function setAdminSessionTrusted(): void
@@ -177,13 +179,16 @@ function passwordConfirmationCheck(string $redirectUrl, int $maxAllowedMinutes):
 
     $sessionStorage = selectSessionStorage($session->sid);
 
-    if ($sessionStorage['password_confirmed_at'] + 60*$maxAllowedMinutes < TIME_NOW)
+    if ($sessionStorage['password_confirmed_at'] + 60*$maxAllowedMinutes <= TIME_NOW)
     {
         loadLanguage();
+        $errors = null;
 
-        if ($mybb->get_input('my2fa_password_confirmation'))
+        if ($mybb->get_input('my2fa_confirm_password'))
         {
             \verify_post_check($mybb->get_input('my_post_key'));
+
+            require_once MYBB_ROOT . 'inc/functions_user.php';
 
             if (\validate_password_from_uid($mybb->user['uid'], $mybb->get_input('password')))
             {
@@ -196,7 +201,7 @@ function passwordConfirmationCheck(string $redirectUrl, int $maxAllowedMinutes):
             }
         }
 
-        eval('$passwordConfirmationPage = "' . template('password_confirmation') . '";');
+        eval('$passwordConfirmationPage = "' . template('confirm_password') . '";');
         \output_page($passwordConfirmationPage);
 
         exit;

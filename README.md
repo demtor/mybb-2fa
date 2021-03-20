@@ -9,8 +9,11 @@ This plugin is currently in public beta and therefore bugs may occur, report the
 Lazy to-do list:
 
 ```
-- security warning notifications (disable 2FA method and use of a recovery code)
+- backup codes
+- email method (send otp via email)
+- security mail notifications on disable of a method + use of a backup code
 - postgresql tables
+- templates caching
 - hooks
 ```
 

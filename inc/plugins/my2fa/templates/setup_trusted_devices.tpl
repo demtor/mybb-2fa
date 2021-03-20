@@ -1,4 +1,4 @@
-<br>
+<br />
 <table border="0" cellspacing="{$theme['borderwidth']}" cellpadding="{$theme['tablespace']}" class="my2fa__trusted-devices tborder">
 	<tr>
 		<td class="thead"><strong>{$lang->my2fa_setup_trusted_devices}</strong></td>

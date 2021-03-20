@@ -23,6 +23,8 @@ function getVerificationForm(array $user, string $verificationUrl, bool $include
         redirectUrlAsQueryString(urldecode($mybb->get_input('redirect_url')))
     );
 
+    $user['username_escaped'] = htmlspecialchars_uni($user['username']);
+
     if (
         isset($methods[$mybb->input['method']]) &&
         isset($userMethods[$mybb->input['method']]) &&
@@ -85,12 +87,13 @@ function getVerificationForm(array $user, string $verificationUrl, bool $include
         if ($includeExtraRows)
             eval('$verificationExtraRows .= "' . template('verification_extra_rows') . '";');
 
-        eval('$output = "' . template('verification_methods') . '";');
+        eval('$output = "' . template('verification') . '";');
     }
 
     return $output;
 }
 
+#todo: order of activated methods
 function getSetupForm(array $user, string $setupUrl, bool $includeBreadcrumb = True): ?string
 {
     global $mybb, $lang, $theme;
@@ -159,7 +162,7 @@ function getSetupForm(array $user, string $setupUrl, bool $includeBreadcrumb = T
 
                 $lang->my2fa_setup_method_activation_date = $lang->sprintf(
                     $lang->my2fa_setup_method_activation_date,
-                    my_date('d M Y', $userMethod['activated_on'])
+                    my_date($mybb->settings['dateformat'], $userMethod['activated_on'])
                 );
                 $lang->my2fa_setup_deactivate_confirmation = $lang->sprintf(
                     $lang->my2fa_setup_deactivate_confirmation,
@@ -180,7 +183,12 @@ function getSetupForm(array $user, string $setupUrl, bool $includeBreadcrumb = T
         if (
             isDeviceTrustingAllowed() &&
             doesUserHave2faEnabled($user['uid']) &&
-            ($userTokens = selectUserTokens($user['uid']))
+            (
+                $userTokens = selectUserTokens($user['uid'], [], [
+                    'order_by' => 'generated_on',
+                    'order_dir' => 'DESC'
+                ])
+            )
         ) {
             $currentUserToken = $userTokens[$mybb->cookies['my2fa_token']] ?? [];
             $otherUserTokens = $userTokens;
@@ -217,12 +225,28 @@ function getSetupForm(array $user, string $setupUrl, bool $includeBreadcrumb = T
 
             $otherTrustedDevicesRow = null;
             if ($otherUserTokens)
+            {
+                $lang->my2fa_setup_other_trusted_devices = $lang->sprintf(
+                    $lang->my2fa_setup_other_trusted_devices,
+                    count($otherUserTokens)
+                );
+
+                $otherTrustedDevicesLogRows = null;
+                foreach($otherUserTokens as $otherUserToken)
+                {
+                    $otherUserToken['generated_on_formatted'] = my_date('normal', $otherUserToken['generated_on']);
+                    $otherUserToken['expire_on_formatted'] = my_date('normal', $otherUserToken['expire_on']);
+
+                    eval('$otherTrustedDevicesLogRows .= "' . template('setup_trusted_devices_row_others_row_log') . '";');
+                }
+
                 eval('$otherTrustedDevicesRow = "' . template('setup_trusted_devices_row_others') . '";');
- 
+            }
+
             eval('$trustedDevices = "' . template('setup_trusted_devices') . '";');
         }
 
-        eval('$output = "' . template('setup_methods') . '";');
+        eval('$output = "' . template('setup') . '";');
     }
 
     return $output;
@@ -256,11 +280,12 @@ HTML;
     <style>
         body, html, #container { height: 100%; margin: 0; }
         #container { display: flex; align-items: center; justify-content: center; text-align: left; }
+        #verification-wrap { flex: 1; }
     </style>
 </head>
 <body>
     <div id="container">
-        <div class="verification-wrap">
+        <div id="verification-wrap">
             {$verificationContent}
         </div>
     </div>
