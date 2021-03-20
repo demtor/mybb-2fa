@@ -19,6 +19,7 @@ $l['my2fa_activate_button'] = "Enable";
 $l['my2fa_deactivate_button'] = "Disable";
 $l['my2fa_manage_button'] = "Manage";
 $l['my2fa_confirm_button'] = "Confirm";
+$l['my2fa_request_button'] = "Request";
 $l['my2fa_cancel_button'] = "Cancel";
 
 $l['my2fa_usercp_setup_wol'] = "Editing <a href=\"usercp.php?action=my2fa\">Two-factor authentication</a>";
@@ -60,3 +61,31 @@ $l['my2fa_totp_activation_instruction_secret_key_1'] = "If you can't use a barco
 $l['my2fa_totp_activation_instruction_secret_key_2'] = "enter this text code instead";
 $l['my2fa_totp_activation_secret_key'] = "Your two-factor secret";
 $l['my2fa_totp_verification_instruction'] = "Open the two-factor authentication app on your device to view your authentication code and verify your identity.";
+
+$l['my2fa_mail'] = "Mail Authentication";
+$l['my2fa_mail_description'] = "Receive authentication codes by mail.";
+$l['my2fa_mail_activation_instruction_request'] = "Request an authentication code to your account mail address.";
+$l['my2fa_mail_activation_instruction_request_1'] = "Send a new authentication code to your account mail address. Your current account mail address is <code>{1}</code>";
+$l['my2fa_mail_activation_instruction_request_mail_subject'] = "2FA Authentication Code";
+$l['my2fa_mail_activation_instruction_request_mail_message'] = "{1},
+
+This is an auto generated mail that contains your Two-factor authentication code.
+
+Here is the autentication code to use:
+------------------------------------------
+{2}
+------------------------------------------
+
+To manage your 2FA settings, you can go to the following URL:
+{3}/usercp.php?action=my2fa
+
+Thank you,
+{4} Staff
+
+------------------------------------------";
+$l['my2fa_mail_activation_instruction_main'] = "Use the authentication code sent to your account mail address.";
+
+
+$l['my2fa_mail_activation_instruction_2'] = "Enter the six-digit code from the mail message.";
+$l['my2fa_mail_activation_instruction_3'] = "A mail message containing the six-digit code has been sent to your account mail address.";
+$l['my2fa_mail_verification_instruction'] = "Access your mail provider to get your authentication code and verify your identity.";
