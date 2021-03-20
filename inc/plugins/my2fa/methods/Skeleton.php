@@ -4,7 +4,7 @@ namespace My2FA\Methods;
 
 class Skeleton extends AbstractMethod
 {
-    public const METHOD_ID = 0;
+    public const METHOD_ID = 22;
 
     protected static $definitions = [
         'name' => 'Skeleton',
@@ -18,11 +18,11 @@ class Skeleton extends AbstractMethod
         extract($viewParams);
 
         $method = \My2FA\selectMethods()[self::METHOD_ID];
-        $userMethod = \My2FA\selectUserMethods($user['uid'])[self::METHOD_ID];
+        $userMethod = \My2FA\selectUserMethods($user['uid'], (array) self::METHOD_ID)[self::METHOD_ID];
 
         if (self::hasUserReachedMaximumAttempts($user['uid']))
         {
-            $errors = inline_error([$lang->my2fa_verification_blocked_error]);
+            $errors = inline_error((array) $lang->my2fa_verification_blocked_error);
         }
         else if (isset($mybb->input['otp']))
         {
@@ -32,9 +32,12 @@ class Skeleton extends AbstractMethod
             }
             else
             {
-                #todo: return here, from before, hasUserReachedMaximumAttempts?
                 self::recordFailedAttempt($user['uid']);
-                $errors = inline_error([$lang->my2fa_code_error]);
+
+                $errors = self::hasUserReachedMaximumAttempts($user['uid'])
+                    ? inline_error((array) $lang->my2fa_verification_blocked_error)
+                    : inline_error((array) $lang->my2fa_code_error)
+                ;
             }
         }
 
@@ -58,7 +61,7 @@ class Skeleton extends AbstractMethod
             }
             else
             {
-                $errors = inline_error([$lang->my2fa_code_error]);
+                $errors = inline_error((array) $lang->my2fa_code_error);
             }
         }
 

@@ -5,18 +5,20 @@
 			<td class="thead"><strong>{$lang->my2fa_title} - {$method['definitions']['name']}</strong></td>
 		</tr>
 		<tr>
-			<td class="tcat">{$lang->my2fa_totp_main_instruction}</td>
+			<td class="tcat">{$lang->my2fa_totp_activation_instruction_main}</td>
 		</tr>
 		<tr>
 			<td class="trow1" style="text-align:center">
 				<p>
-					{$lang->my2fa_totp_instruction_1}
-					{$lang->my2fa_totp_manual_secret_key_1} <a href="javascript:void(0)" title="{$secretKey}" class="open-secret-code" data-selector="#secret-code" rel="modal:open">{$lang->my2fa_totp_manual_secret_key_2}</a>.
+					{$lang->my2fa_totp_activation_instruction_1}
+					<br />
+					{$lang->my2fa_totp_activation_instruction_secret_key_1} <a href="javascript:void(0)" title="{$sessionStorage['totp_secret_key']}" id="secret-code">{$lang->my2fa_totp_activation_instruction_secret_key_2}</a>.
 				</p>
 				{$qrCodeRendered}
 				<p>
-					<strong>{$lang->my2fa_totp_instruction_2}</strong>
-					<br />{$lang->my2fa_totp_instruction_3}
+					<strong>{$lang->my2fa_totp_activation_instruction_2}</strong>
+					<br />
+					{$lang->my2fa_totp_activation_instruction_3}
 				</p>
 				<input type="text" name="otp" class="textbox" style="text-align:center" placeholder="123456" autocomplete="off" autofocus />
 			</td>
@@ -25,25 +27,21 @@
 	<br />
 	{$setupFormButtons}
 </form>
-<div id="secret-code" style="display:none">
-	<table border="0" cellspacing="{$theme['borderwidth']}" cellpadding="{$theme['tablespace']}" class="tborder">
+<div id="secret-code-modal" style="display:none">
+	<table border="0" cellspacing="{$theme['borderwidth']}" cellpadding="{$theme['tablespace']}" class="tborder" style="text-align:center">
 		<tr>
-			<td class="thead" style="text-align:center"><strong>{$lang->my2fa_totp_secret_key}</strong></td>
+			<td class="thead"><strong>{$lang->my2fa_totp_activation_secret_key}</strong></td>
 		</tr>
 		<tr>
-			<td class="trow1" style="text-align:center"><code>{$sessionStorage['totp_secret_key']}</code></td>
+			<td class="trow1"><code>{$sessionStorage['totp_secret_key']}</code></td>
 		</tr>
 	</table>
 </div>
 <script type="text/javascript">
-	$('a.open-secret-code').click(function(event) {
-		event.preventDefault();
-
-		$($(this).attr('data-selector')).modal({
+	$('#secret-code').on('click', function(event) {
+		$('#secret-code-modal').modal({
 			fadeDuration: 250,
 			keepelement: true
 		});
-
-		return false;
 	});
 </script>

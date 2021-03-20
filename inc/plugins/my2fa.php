@@ -44,7 +44,6 @@ if (!defined('IN_ADMINCP'))
     $plugins->add_hook('xmlhttp', 'my2fa_xmlhttp', -22);
     $plugins->add_hook('archive_start', 'my2fa_archive_start', -22);
 
-    $plugins->add_hook('global_intermediate', 'my2fa_global_intermediate');
     $plugins->add_hook('datahandler_login_complete_end', 'my2fa_datahandler_login_complete_end');
     $plugins->add_hook('misc_start', 'my2fa_misc_start');
     $plugins->add_hook('usercp_menu_built', 'my2fa_usercp_menu_built');
@@ -135,17 +134,13 @@ function my2fa_uninstall()
     $PL or require_once PLUGINLIBRARY;
 
     $PL->settings_delete('my2fa');
-    $PL->stylesheet_delete('my2fa');
     $PL->templates_delete('my2fa');
+    $PL->stylesheet_delete('my2fa');
 
     require_once MYBB_ROOT . '/inc/adminfunctions_templates.php';
 
     find_replace_templatesets('usercp_nav_profile',
         '#' . preg_quote('<!-- my2faUsercpSetupNav -->') . '#i',
-        ''
-    );
-    find_replace_templatesets('header',
-        '#' . preg_quote('{$notifiedGroupNotice}') . '#i',
         ''
     );
 
@@ -168,7 +163,7 @@ function my2fa_is_installed()
 
     // temp
     return $db->fetch_field(
-        $db->simple_select('settinggroups', '1 AS occurs', "name = 'my2fa'", ['limit' => 1]),
+        $db->simple_select('settinggroups', '1 AS occurs', "name = 'my2fa'"),
         'occurs'
     );
 }
@@ -210,18 +205,12 @@ function my2fa_activate()
             'max_verification_attempts' => [
                 'title'       => 'Maximum Verification Attempts',
                 'description' => 'Max number of incorrect attempts before the user is blocked for <strong>5 minutes</strong> during 2FA verification.',
-                'optionscode' => 'text',
+                'optionscode' => 'numeric',
                 'value'       => 5
             ],
             'forced_groups' => [
                 'title'       => 'Forced Groups',
-                'description' => 'Select which user groups are forced to have 2FA activated.',
-                'optionscode' => 'groupselect',
-                'value'       => ''
-            ],
-            'notified_groups' => [
-                'title'       => 'Notified Groups',
-                'description' => 'Select which user groups will be continually notified with a global notice to activate 2FA.',
+                'description' => 'Select which user groups are forced to have 2FA activated. Suggested for staffer groups.',
                 'optionscode' => 'groupselect',
                 'value'       => ''
             ],
@@ -280,10 +269,6 @@ function my2fa_activate()
         '#' . preg_quote('{$changenameop}') . '#i',
         '{$changenameop}<!-- my2faUsercpSetupNav -->'
     );
-    find_replace_templatesets('header',
-        '#' . preg_quote('{$pm_notice}') . '#i',
-        '{$pm_notice}{$notifiedGroupNotice}'
-    );
 }
 
 function my2fa_deactivate()
@@ -341,10 +326,11 @@ function my2fa_global_start()
         #todo: maybe include possible ajax request
         if (!My2FA\hasUserBeenRedirected())
         {
-            My2FA\updateSessionStorage($session->sid, ['is_redirected' => 1]);
+            My2FA\updateSessionStorage($session->sid, ['redirected' => 1]);
             My2FA\redirectToVerification();
         }
 
+        #todo: inspect method (other plugin fields?)
         $session->load_guest();
 
         $mybb->user['ismoderator'] = False;
@@ -352,9 +338,9 @@ function my2fa_global_start()
     }
     else if (
         My2FA\doesUserHave2faEnabled($mybb->user['uid']) &&
-        !My2FA\isSessionTrusted($mybb->user['uid'])
+        !My2FA\isSessionTrusted()
     ) {
-        My2FA\setSessionTrusted($mybb->user['uid']);
+        My2FA\setSessionTrusted();
     }
 
     if (My2FA\isUserForcedToHave2faActivated($mybb->user['uid']))
@@ -393,29 +379,13 @@ function my2fa_archive_start()
     }
 }
 
-function my2fa_global_intermediate()
-{
-    global $mybb, $lang,
-    $notifiedGroupNotice;
-
-    if (!$mybb->user['uid'])
-        return;
-
-    $notifiedGroupNotice = null;
-    if (My2FA\doesUserNeedsGlobalNotice($mybb->user['uid']))
-    {
-        My2FA\loadLanguage();
-        eval('$notifiedGroupNotice = "' . My2FA\template('global_notice_notified_group') . '";');
-    }
-}
-
 #todo: add password_confirmed_at? also in other inputs with password confirmation
 function my2fa_datahandler_login_complete_end($userHandler)
 {
     global $session;
 
     if (My2FA\isUserVerificationRequired($userHandler->login_data['uid']))
-        My2FA\updateSessionStorage($session->sid, ['is_redirected' => 0]);
+        My2FA\updateSessionStorage($session->sid, ['redirected' => 0]);
 }
 
 function my2fa_misc_start()
@@ -564,32 +534,6 @@ function my2fa_admin_do_recount_rebuild()
 
     if ($methodIdsStr)
     {
-        /*
-        $db->write_query("
-            UPDATE ".TABLE_PREFIX."users u
-            SET u.has_my2fa = 1
-            WHERE
-                u.has_my2fa = 0 AND
-                EXISTS (
-                    SELECT um.uid
-                    FROM ".TABLE_PREFIX."my2fa_user_methods um
-                    WHERE um.uid = u.uid AND um.method_id IN('{$methodIdsStr}')
-                )
-        ");
-
-        $db->write_query("
-            UPDATE ".TABLE_PREFIX."users u
-            SET u.has_my2fa = 0
-            WHERE
-                u.has_my2fa = 1 AND
-                NOT EXISTS (
-                    SELECT um.uid
-                    FROM ".TABLE_PREFIX."my2fa_user_methods um
-                    WHERE um.uid = u.uid AND um.method_id IN('{$methodIdsStr}')
-                )
-        ");
-        */
-
         $query = $db->simple_select(
             'my2fa_user_methods',
             'DISTINCT uid',

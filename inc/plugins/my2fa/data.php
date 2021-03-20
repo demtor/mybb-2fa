@@ -21,6 +21,7 @@ function selectMethods(): array
             ) {
                 $methods[$className::METHOD_ID] = [
                     'id' => $className::METHOD_ID,
+                    'order' => $className::ORDER,
                     'className' => $className,
                     'definitions' => $className::getDefinitions(),
                     'canBeActivated' => $className::canBeActivated(),
@@ -29,41 +30,70 @@ function selectMethods(): array
                 ];
             }
         }
+
+        uasort($methods, function ($a, $b) {
+            return $a['order'] <=> $b['order'];
+        });
     }
 
     return $methods;
 }
 
-function selectUserMethods(int $userId): array
+function selectUserMethods(int $userId, array $methodIds = [], array $options = []): array
 {
     global $db;
-    static $usersMethods;
 
-    if (!isset($usersMethods[$userId]))
+    $userMethods = [];
+    $methods = selectMethods();
+
+    $methodIds = $methodIds
+        ? array_intersect($methodIds, array_column($methods, 'id'))
+        : array_column($methods, 'id')
+    ;
+    $methodIdsStr = implode(',', $methodIds);
+
+    if ($methodIdsStr)
     {
-        $usersMethods[$userId] = [];
-        $methodIdsStr = implode(',', array_column(selectMethods(), 'id'));
+        $query = $db->simple_select(
+            'my2fa_user_methods',
+            '*',
+            "uid = {$userId} AND method_id IN ({$methodIdsStr})",
+            $options
+        );
 
-        if ($methodIdsStr)
+        while ($userMethod = $db->fetch_array($query))
         {
-            $query = $db->simple_select(
-                'my2fa_user_methods',
-                '*',
-                "uid = {$userId} AND method_id IN ({$methodIdsStr})"
-            );
-
-            while ($userMethod = $db->fetch_array($query))
-            {
-                $userMethod['data'] = json_decode($userMethod['data'], True) ?? [];
-                $usersMethods[$userId][$userMethod['method_id']] = $userMethod;
-            }
+            $userMethod['data'] = json_decode($userMethod['data'], True) ?? [];
+            $userMethods[$userMethod['method_id']] = $userMethod;
         }
     }
 
-    return $usersMethods[$userId];
+    return $userMethods;
 }
 
-function selectUserTokens(int $userId, array $tokenIds = []): array
+function countUserMethods(int $userId): int
+{
+    global $db;
+
+    $count = 0;
+    $methodIdsStr = implode(',', array_column(selectMethods(), 'id'));
+
+    if ($methodIdsStr)
+    {
+        $count = $db->fetch_field(
+            $db->simple_select(
+                'my2fa_user_methods',
+                'COUNT(*) AS count',
+                "uid = {$userId} AND method_id IN ({$methodIdsStr})"
+            ),
+            'count'
+        );
+    }
+
+    return $count;
+}
+
+function selectUserTokens(int $userId, array $tokenIds = [], array $options = []): array
 {
     global $db;
 
@@ -78,8 +108,8 @@ function selectUserTokens(int $userId, array $tokenIds = []): array
     $query = $db->simple_select(
         'my2fa_tokens',
         '*',
-        //"uid = {$userId}{$whereClause} AND expire_on > " . TIME_NOW
-        "uid = {$userId}{$whereClause} AND (expire_on = 0 || expire_on > " . TIME_NOW . ")"
+        "uid = {$userId}{$whereClause} AND expire_on > " . TIME_NOW,
+        $options
     );
 
     $userTokens = [];
@@ -91,7 +121,7 @@ function selectUserTokens(int $userId, array $tokenIds = []): array
     return $userTokens;
 }
 
-function selectUserLogs(int $userId, string $event, int $secondsInterval): array
+function selectUserLogs(int $userId, string $event, int $secondsInterval, array $options = []): array
 {
     global $db;
 
@@ -102,7 +132,8 @@ function selectUserLogs(int $userId, string $event, int $secondsInterval): array
             uid = {$userId} AND
             event = '" . $db->escape_string($event) . "' AND
             inserted_on > " . (TIME_NOW - $secondsInterval) . "
-        "
+        ",
+        $options
     );
 
     $userLogs = [];
@@ -113,6 +144,24 @@ function selectUserLogs(int $userId, string $event, int $secondsInterval): array
     }
 
     return $userLogs;
+}
+
+function countUserLogs(int $userId, string $event, int $secondsInterval): int
+{
+    global $db;
+
+    return $db->fetch_field(
+        $db->simple_select(
+            'my2fa_logs',
+            'COUNT(*) AS count',
+            "
+                uid = {$userId} AND
+                event = '" . $db->escape_string($event) . "' AND
+                inserted_on > " . (TIME_NOW - $secondsInterval) . "
+            "
+        ),
+        'count'
+    );
 }
 
 function selectSessionStorage(string $sessionId): array
@@ -164,18 +213,18 @@ function insertUserMethod(array $data): array
 {
     global $db;
 
-    $data = getDataItemsEscaped($data);
-
     if (!empty($data['data']))
         $data['data'] = json_encode($data['data']);
     else
         unset($data['data']);
 
+    $data = getDataItemsEscaped($data);
+
     $data += [
         'activated_on' => TIME_NOW
     ];
 
-    if (!doesUserHave2faEnabled($data['uid']))
+    if (!selectUserHasMy2faField($data['uid']))
         updateUserHasMy2faField($data['uid'], True);
 
     $db->insert_query('my2fa_user_methods', $data);
@@ -202,12 +251,12 @@ function insertUserLog(array $data): array
 {
     global $db;
 
-    $data = getDataItemsEscaped($data);
-
     if (!empty($data['data']))
         $data['data'] = json_encode($data['data']);
     else
         unset($data['data']);
+
+    $data = getDataItemsEscaped($data);
 
     $data += [
         'inserted_on' => TIME_NOW
@@ -242,19 +291,20 @@ function updateSessionStorage(string $sessionId, array $data): void
 
 function updateUserHasMy2faField(int $userId, bool $hasMy2faField): void
 {
-    global $db;
+    global $db, $mybb;
 
     $db->update_query('users', ['has_my2fa' => (int) $hasMy2faField], "uid = {$userId}");
+
+    if ($userId === (int) $mybb->user['uid'])
+        $mybb->user['has_my2fa'] = (int) $hasMy2faField;
 }
 
 function deleteUserMethod(int $userId, int $methodId): void
 {
     global $db;
 
-    $userMethods = selectUserMethods($userId);
-
     // if you want, add untrust session too (not necessary, but for convention)
-    if (count($userMethods) === 1)
+    if (countUserMethods($userId) === 1)
     {
         updateUserHasMy2faField($userId, False);
         deleteUserTokens($userId);

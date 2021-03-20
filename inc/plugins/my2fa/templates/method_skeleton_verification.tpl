@@ -1,6 +1,6 @@
 {$errors}
 <form action="{$verificationUrl}&method={$method['id']}" method="post" class="my2fa__verification my2fa__verification--{$method['id']}">
-	<table cellspacing="{$theme['borderwidth']}" cellpadding="{$theme['tablespace']}" border="0" class="tborder">
+	<table border="0" cellspacing="{$theme['borderwidth']}" cellpadding="{$theme['tablespace']}" class="tborder">
 		<tr>
 			<td class="thead"><strong>{$lang->my2fa_title} - {$method['definitions']['name']}</strong></td>
 		</tr>

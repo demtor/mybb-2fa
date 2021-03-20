@@ -5,6 +5,7 @@ namespace My2FA\Methods;
 abstract class AbstractMethod
 {
     public const METHOD_ID = null;
+    public const ORDER = 22;
 
     protected static $definitions = [
         'name' => null,
@@ -51,7 +52,7 @@ abstract class AbstractMethod
     final protected static function hasUserReachedMaximumAttempts(int $userId): bool
     {
         return
-            count(\My2FA\selectUserLogs($userId, 'failed_attempt', 60*5))
+            \My2FA\countUserLogs($userId, 'failed_attempt', 60*5)
             >= \My2FA\setting('max_verification_attempts')
         ;
     }
@@ -102,17 +103,17 @@ abstract class AbstractMethod
 
         \My2FA\loadLanguage();
 
+        $redirectUrl = \My2FA\isRedirectUrlValid($mybb->get_input('redirect_url'))
+            ? urldecode($mybb->input['redirect_url'])
+            : 'index.php'
+        ;
+
         if (
             \My2FA\isDeviceTrustingAllowed() &&
             $mybb->get_input('trust_device') === '1'
         ) {
             \My2FA\setDeviceTrusted($userId);
         }
-
-        $redirectUrl = \My2FA\isRedirectUrlValid($mybb->get_input('redirect_url'))
-            ? urldecode($mybb->input['redirect_url'])
-            : 'index.php'
-        ;
 
         if (defined('IN_ADMINCP'))
         {
@@ -123,7 +124,7 @@ abstract class AbstractMethod
         }
         else
         {
-            \My2FA\setSessionTrusted($userId);
+            \My2FA\setSessionTrusted();
 
             \My2FA\redirect($redirectUrl, $lang->my2fa_verified_success);
         }
@@ -133,8 +134,8 @@ abstract class AbstractMethod
     {
         global $lang;
 
-        if (!\My2FA\isSessionTrusted($userId))
-            \My2FA\setSessionTrusted($userId);
+        if (!\My2FA\isSessionTrusted())
+            \My2FA\setSessionTrusted();
 
         \My2FA\insertUserMethod([
             'uid' => $userId,

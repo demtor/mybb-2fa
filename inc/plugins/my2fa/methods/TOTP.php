@@ -12,6 +12,7 @@ use BaconQrCode\Writer;
 class TOTP extends AbstractMethod
 {
     public const METHOD_ID = 1;
+    public const ORDER = 1;
 
     protected static $definitions = [];
 
@@ -21,7 +22,7 @@ class TOTP extends AbstractMethod
 
         \My2FA\loadUserLanguage();
 
-        self::$definitions['name'] = $lang->my2fa_totp_name;
+        self::$definitions['name'] = $lang->my2fa_totp;
         self::$definitions['description'] = $lang->my2fa_totp_description;
 
         return self::$definitions;
@@ -34,11 +35,11 @@ class TOTP extends AbstractMethod
         extract($viewParams);
 
         $method = \My2FA\selectMethods()[self::METHOD_ID];
-        $userMethod = \My2FA\selectUserMethods($user['uid'])[self::METHOD_ID];
+        $userMethod = \My2FA\selectUserMethods($user['uid'], (array) self::METHOD_ID)[self::METHOD_ID];
 
         if (self::hasUserReachedMaximumAttempts($user['uid']))
         {
-            $errors = inline_error([$lang->my2fa_verification_blocked_error]);
+            $errors = inline_error((array) $lang->my2fa_verification_blocked_error);
         }
         else if (isset($mybb->input['otp']))
         {
@@ -50,7 +51,11 @@ class TOTP extends AbstractMethod
             else
             {
                 self::recordFailedAttempt($user['uid']);
-                $errors = inline_error([$lang->my2fa_code_error]);
+
+                $errors = self::hasUserReachedMaximumAttempts($user['uid'])
+                    ? inline_error((array) $lang->my2fa_verification_blocked_error)
+                    : inline_error((array) $lang->my2fa_code_error)
+                ;
             }
         }
 
@@ -84,7 +89,7 @@ class TOTP extends AbstractMethod
 
             if (self::isUserOtpValid($user['uid'], $mybb->input['otp'], $sessionStorage['totp_secret_key']))
             {
-                \My2FA\deleteFromSessionStorage($session->sid, ['totp_secret_key']);
+                \My2FA\deleteFromSessionStorage($session->sid, (array) 'totp_secret_key');
 
                 self::recordSuccessfulAttempt($user['uid'], $mybb->input['otp']);
                 self::completeActivation($user['uid'], $setupUrl, [
@@ -93,7 +98,7 @@ class TOTP extends AbstractMethod
             }
             else
             {
-                $errors = inline_error([$lang->my2fa_code_error]);
+                $errors = inline_error((array) $lang->my2fa_code_error);
             }
         }
 

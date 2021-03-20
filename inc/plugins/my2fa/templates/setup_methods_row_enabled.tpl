@@ -4,7 +4,7 @@
 		<span class="smalltext">($lang->my2fa_setup_method_activation_date)</span>
 		<div class="smalltext">{$method['definitions']['description']}</div>
 	</td>
-	<td class="my2fa__control-buttons trow1">
+	<td class="my2fa__method-controls trow1">
 		{$setupManageButton}
 		{$setupDeactivateButton}
 	</td>
