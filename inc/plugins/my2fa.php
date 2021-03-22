@@ -126,6 +126,15 @@ function my2fa_install()
             KEY `IX_uei` (`uid`, `event`, `inserted_on`)
         ) ENGINE=InnoDB" . $db->build_create_table_collation()
     );
+
+    $db->write_query("
+        CREATE TABLE IF NOT EXISTS `".TABLE_PREFIX."my2fa_mail_codes` (
+            `uid` int unsigned NOT NULL,
+            `code` varchar(6) NOT NULL,
+            `dateline` int NOT NULL DEFAULT '0',
+            UNIQUE KEY (`uid`)
+        ) ENGINE=InnoDB" . $db->build_create_table_collation()
+    );
 }
 
 function my2fa_uninstall()
