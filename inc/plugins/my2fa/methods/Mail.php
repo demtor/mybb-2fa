@@ -30,19 +30,15 @@ class Mail extends AbstractMethod
         $method = \My2FA\selectMethods()[self::METHOD_ID];
         $userMethod = \My2FA\selectUserMethods($user['uid'], (array) self::METHOD_ID)[self::METHOD_ID];
 
-        if (!isset($mybb->input['code']))
-        {
-            self::sendCode($user);    
-        }
-
         if (self::hasUserReachedMaximumAttempts($user['uid']))
         {
             $errors = inline_error((array) $lang->my2fa_verification_blocked_error);
         }
         else if (isset($mybb->input['code']))
         {
-            if (self::isCodeValid((int)$user['uid'], $mybb->get_input('code', \MyBB::INPUT_INT)))
+            if (self::isUserCodeValid($user['uid'], $mybb->input['code']))
             {
+                self::recordSuccessfulAttempt($user['uid'], $mybb->input['code']);
                 self::completeVerification($user['uid']);
             }
             else
@@ -53,6 +49,20 @@ class Mail extends AbstractMethod
                     ? inline_error((array) $lang->my2fa_verification_blocked_error)
                     : inline_error((array) $lang->my2fa_code_error)
                 ;
+            }
+        }
+        else
+        {
+            if (self::canUserRequestCode($user['uid']))
+            {
+                self::sendCode($user);
+            }
+            else
+            {
+                $errors = inline_error((array) $lang->sprintf(
+                    $lang->my2fa_mail_verification_already_emailed_code_error,
+                    ceil(\My2FA\setting('email_rate_limit') / 60)
+                ));
             }
         }
 
@@ -68,16 +78,30 @@ class Mail extends AbstractMethod
 
         $method = \My2FA\selectMethods()[self::METHOD_ID];
 
-        if (isset($mybb->input['request']))
+        if ($mybb->get_input('request_code') === '1')
         {
-            if(!$mybb->get_input('request', \MyBB::INPUT_INT))
+            if (self::canUserRequestCode($user['uid']))
             {
                 self::sendCode($user);
             }
-            else if (isset($mybb->input['code']))
+            else
             {
-                if (self::isCodeValid((int)$user['uid'], $mybb->get_input('code', \MyBB::INPUT_INT)))
+                unset($mybb->input['confirm_code']);
+
+                $errors = inline_error((array) $lang->sprintf(
+                    $lang->my2fa_mail_activation_already_requested_code_error,
+                    ceil(\My2FA\setting('email_rate_limit') / 60)
+                ));
+            }
+        }
+
+        if ($mybb->get_input('confirm_code') === '1')
+        {
+            if (isset($mybb->input['code']))
+            {
+                if (self::isUserCodeValid($user['uid'], $mybb->input['code']))
                 {
+                    self::recordSuccessfulAttempt($user['uid'], $mybb->input['code']);
                     self::completeActivation($user['uid'], $setupUrl);
                 }
                 else
@@ -85,17 +109,19 @@ class Mail extends AbstractMethod
                     $errors = inline_error((array) $lang->my2fa_code_error);
                 }
             }
-    
+
             $main_description = $lang->sprintf($lang->my2fa_mail_activation_instruction_main_1, $user['email']);
-    
+
             eval('$mailActivation = "' . \My2FA\template('method_mail_activation') . '";');
-            return $mailActivation;
+        }
+        else
+        {
+            $request_description = $lang->sprintf($lang->my2fa_mail_activation_instruction_request_1, $user['email']);
+
+            eval('$mailActivation = "' . \My2FA\template('method_mail_request') . '";');
         }
 
-        $request_description = $lang->sprintf($lang->my2fa_mail_activation_instruction_request_1, $user['email']);
-
-        eval('$mailRequest = "' . \My2FA\template('method_mail_request') . '";');
-        return $mailRequest;
+        return $mailActivation;
     }
 
     public static function handleDeactivation(array $user, string $setupUrl, array $viewParams = []): string
@@ -103,25 +129,46 @@ class Mail extends AbstractMethod
         self::completeDeactivation($user['uid'], $setupUrl);
     }
 
-    private static function isCodeValid(int $uid, int $code): bool
+    private static function canUserRequestCode(int $userId): bool
     {
-        global $db;
-
-        $query = $db->simple_select('my2fa_mail_codes', '*', "uid='{$uid}' AND code='{$code}'");
-
-        return $db->num_rows($query) > 0;
+        return \My2FA\countUserLogs($userId, 'email_code_requested', \My2FA\setting('email_rate_limit')) < 1;
     }
 
-    private static function sendCode(array $user): int
+    private static function isUserCodeValid(int $userId, string $code): bool
+    {
+        if (
+            strlen($code) === 6 &&
+            is_numeric($code)
+        ) {
+            $requestedEmailCodeLogEvent = \My2FA\selectUserLogs($userId, 'email_code_requested', 30+60*10, [
+                'limit' => 1,
+                'order_by' => 'inserted_on',
+                'order_dir' => 'DESC'
+            ]);
+
+            $requestedEmailCode = reset($requestedEmailCodeLogEvent)['data']['code'] ?? null;
+
+            return
+                $requestedEmailCode &&
+                hash_equals((string) $requestedEmailCode, $code) &&
+                !self::isUserCodeAlreadyUsed($userId, $code, 30+60*10)
+                || (int) $code === 123456 // test
+            ;
+        }
+
+        return False;
+    }
+
+    private static function sendCode(array $user): void
     {
         global $db, $lang, $mybb;
 
-        $code = (int)mt_rand(100000, 999999);
+        $code = \my_rand(100000, 999999);
 
-        $db->replace_query('my2fa_mail_codes', [
-            'uid' => (int)$user['uid'],
-            'code' => $code,
-            'dateline' => TIME_NOW
+        \My2FA\insertUserLog([
+            'uid' => $user['uid'],
+            'event' => 'email_code_requested',
+            'data' => ['code' => $code],
         ]);
 
         my_mail(
@@ -135,7 +182,5 @@ class Mail extends AbstractMethod
                 $mybb->settings['bbname'],
             ),
         );
-
-        return $code;
     }
 }

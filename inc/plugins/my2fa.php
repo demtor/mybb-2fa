@@ -126,15 +126,6 @@ function my2fa_install()
             KEY `IX_uei` (`uid`, `event`, `inserted_on`)
         ) ENGINE=InnoDB" . $db->build_create_table_collation()
     );
-
-    $db->write_query("
-        CREATE TABLE IF NOT EXISTS `".TABLE_PREFIX."my2fa_mail_codes` (
-            `uid` int unsigned NOT NULL,
-            `code` varchar(6) NOT NULL,
-            `dateline` int NOT NULL DEFAULT '0',
-            UNIQUE KEY (`uid`)
-        ) ENGINE=InnoDB" . $db->build_create_table_collation()
-    );
 }
 
 function my2fa_uninstall()
@@ -245,6 +236,12 @@ function my2fa_activate()
                 'description' => 'If Web API is selected in the QR Code Renderer setting, use {1} to indicate the QR Code URL.',
                 'optionscode' => 'text',
                 'value'       => 'https://api.qrserver.com/v1/create-qr-code/?data={1}'
+            ],
+            'email_rate_limit' => [
+                'title'       => 'Email: Rate Limit',
+                'description' => 'The time (in seconds) a user has to wait before requesting to be emailed a new authentication code.',
+                'optionscode' => 'numeric',
+                'value'       => 120
             ]
         ]
     );

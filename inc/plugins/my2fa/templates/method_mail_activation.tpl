@@ -23,6 +23,6 @@
 		</tr>
 	</table>
 	<br />
+    <input type="hidden" name="confirm_code" value="1" />
 	{$setupFormButtons}
-	<input type="hidden" name="request" value="1" />
 </form>

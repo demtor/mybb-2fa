@@ -16,10 +16,7 @@
 		</tr>
 	</table>
 	<br />
-	<div style="text-align:center">
-		<input type="hidden" name="activate" value="1" />
-		<input type="hidden" name="my_post_key" value="{$mybb->post_code}" />
-		<a href="{$setupUrl}" class="my2fa__cancel-button">{$lang->my2fa_cancel_button}</a>
-		<input type="submit" class="my2fa__confirm-button button" name="request" value="{$lang->my2fa_request_button}" />
-	</div>
+    <input type="hidden" name="request_code" value="1" />
+    <input type="hidden" name="confirm_code" value="1" />
+	{$setupFormButtons}
 </form>
