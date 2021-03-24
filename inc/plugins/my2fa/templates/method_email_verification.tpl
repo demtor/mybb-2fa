@@ -6,7 +6,7 @@
 		</tr>
 		<tr>
 			<td class="trow1" style="text-align:center">
-				<p>{$lang->my2fa_mail_verification_instruction}</p>
+				<p>{$lang->my2fa_email_verification_instruction}</p>
 				<input type="text" name="code" class="textbox" style="text-align:center" placeholder="123456" autocomplete="off" autofocus />
 			</td>
 		</tr>

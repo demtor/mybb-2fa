@@ -5,18 +5,14 @@
 			<td class="thead"><strong>{$lang->my2fa_title} - {$method['definitions']['name']}</strong></td>
 		</tr>
 		<tr>
-			<td class="tcat">{$lang->my2fa_mail_activation_instruction_main}</td>
+			<td class="tcat">{$lang->my2fa_email_activation_instruction_main}</td>
 		</tr>
 		<tr>
 			<td class="trow1" style="text-align:center">
 				<p>
-					{$main_description}
-				</p>
-				{$qrCodeRendered}
-				<p>
-					<strong>{$lang->my2fa_mail_activation_instruction_2}</strong>
+					<strong>{$lang->my2fa_email_activation_instruction_1}</strong>
 					<br />
-					{$lang->my2fa_mail_activation_instruction_3}
+					{$lang->my2fa_email_activation_instruction_2}
 				</p>
 				<input type="text" name="code" class="textbox" style="text-align:center" placeholder="123456" autocomplete="off" autofocus />
 			</td>

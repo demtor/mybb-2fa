@@ -61,30 +61,30 @@ $l['my2fa_totp_activation_instruction_secret_key_2'] = "enter this text code ins
 $l['my2fa_totp_activation_secret_key'] = "Your two-factor secret";
 $l['my2fa_totp_verification_instruction'] = "Open the two-factor authentication app on your device to view your authentication code and verify your identity.";
 
-$l['my2fa_mail'] = "Mail Authentication";
-$l['my2fa_mail_description'] = "Receive authentication codes by mail.";
-$l['my2fa_mail_activation_instruction_request'] = "Request an authentication code to your account mail address.";
-$l['my2fa_mail_activation_instruction_request_1'] = "Send a new authentication code to your account mail address. Your current account mail address is <code>{1}</code>";
-$l['my2fa_mail_activation_instruction_request_mail_subject'] = "2FA Authentication Code";
-$l['my2fa_mail_activation_instruction_request_mail_message'] = "{1},
+$l['my2fa_email'] = "Email Confirmation";
+$l['my2fa_email_description'] = "Use codes sent to the email associated with your account.";
+$l['my2fa_email_activation_request_instruction_main'] = "Request a verification code to your account email address.";
+$l['my2fa_email_activation_request_instruction_1'] = "<strong>NB</strong>: other two-factor authentication methods should be chosen over this if possible.";
+$l['my2fa_email_activation_request_instruction_2'] = "A single-use security code will be sent to your email address at <strong>{1}</strong>.";
+$l['my2fa_email_activation_instruction_main'] = "Use the verification code sent to your email address.";
+$l['my2fa_email_activation_instruction_1'] = "Enter the six-digit code that we just sent to you.";
+$l['my2fa_email_activation_instruction_2'] = "An email has been sent to your account email address containing a six-digit code that you can enter below.";
+$l['my2fa_email_activation_already_requested_code_error'] = "You have already requested a verification code recently. Please try again in {1} minute(s).";
+$l['my2fa_email_verification_instruction'] = "An email has been sent to <strong>{1}</strong> with a single-use verification code to verify your identity.";
+$l['my2fa_email_verification_already_emailed_code_error'] = "The verification code has already been emailed to you. If you have not received anything, please retry in {1} minute(s).";
+$l['my2fa_email_notification_subject'] = "Your login verification code at {1}";
+$l['my2fa_email_notification_message'] = "{1},
 
-This is an auto generated mail that contains your Two-factor authentication code.
+In order to complete your login (or two-factor authentication setup), please use the following code:
 
-Here is the autentication code to use:
 ------------------------------------------
 {2}
 ------------------------------------------
 
-To manage your 2FA settings, you can go to the following URL:
+If you did not initiate this request, please change your password urgently.
+
+To manage your two-factor authentication settings, you can go to the following URL:
 {3}/usercp.php?action=my2fa
 
 Thank you,
-{4} Staff
-
-------------------------------------------";
-$l['my2fa_mail_activation_instruction_main'] = "Use the authentication code sent to your account mail address.";
-$l['my2fa_mail_activation_already_requested_code_error'] = "You have already requested an authentication code recently. Please try again in {1} minute(s).";
-$l['my2fa_mail_activation_instruction_2'] = "Enter the six-digit code from the mail message.";
-$l['my2fa_mail_activation_instruction_3'] = "A mail message containing the six-digit code has been sent to your account mail address.";
-$l['my2fa_mail_verification_instruction'] = "Access your mail provider to get your authentication code and verify your identity.";
-$l['my2fa_mail_verification_already_emailed_code_error'] = "The authentication code has already been emailed to you. If you have not received anything, please retry in {1} minute(s).";
+{4} Staff";

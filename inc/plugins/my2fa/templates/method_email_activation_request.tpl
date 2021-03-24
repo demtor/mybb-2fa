@@ -5,13 +5,12 @@
 			<td class="thead"><strong>{$lang->my2fa_title} - {$method['definitions']['name']}</strong></td>
 		</tr>
 		<tr>
-			<td class="tcat">{$lang->my2fa_mail_activation_instruction_request}</td>
+			<td class="tcat">{$lang->my2fa_email_activation_request_instruction_main}</td>
 		</tr>
 		<tr>
 			<td class="trow1" style="text-align:center">
-				<p>
-					{$request_description}
-				</p>
+                <p>{$lang->my2fa_email_activation_request_instruction_1}</p>
+				<p>{$lang->my2fa_email_activation_request_instruction_2}</p>
 			</td>
 		</tr>
 	</table>

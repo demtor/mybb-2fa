@@ -2,7 +2,7 @@
 
 namespace My2FA\Methods;
 
-class Mail extends AbstractMethod
+class Email extends AbstractMethod
 {
     public const METHOD_ID = 2;
     public const ORDER = 2;
@@ -15,8 +15,8 @@ class Mail extends AbstractMethod
 
         \My2FA\loadUserLanguage();
 
-        self::$definitions['name'] = $lang->my2fa_mail;
-        self::$definitions['description'] = $lang->my2fa_mail_description;
+        self::$definitions['name'] = $lang->my2fa_email;
+        self::$definitions['description'] = $lang->my2fa_email_description;
 
         return self::$definitions;
     }
@@ -60,13 +60,18 @@ class Mail extends AbstractMethod
             else
             {
                 $errors = inline_error((array) $lang->sprintf(
-                    $lang->my2fa_mail_verification_already_emailed_code_error,
+                    $lang->my2fa_email_verification_already_emailed_code_error,
                     ceil(\My2FA\setting('email_rate_limit') / 60)
                 ));
             }
         }
 
-        eval('$mailVerification = "' . \My2FA\template('method_mail_verification') . '";');
+        $lang->my2fa_email_verification_instruction = $lang->sprintf(
+            $lang->my2fa_email_verification_instruction,
+            self::getObfuscatedEmailAddress($user['email'])
+        );
+
+        eval('$mailVerification = "' . \My2FA\template('method_email_verification') . '";');
         return $mailVerification;
     }
 
@@ -89,7 +94,7 @@ class Mail extends AbstractMethod
                 unset($mybb->input['confirm_code']);
 
                 $errors = inline_error((array) $lang->sprintf(
-                    $lang->my2fa_mail_activation_already_requested_code_error,
+                    $lang->my2fa_email_activation_already_requested_code_error,
                     ceil(\My2FA\setting('email_rate_limit') / 60)
                 ));
             }
@@ -110,15 +115,16 @@ class Mail extends AbstractMethod
                 }
             }
 
-            $main_description = $lang->sprintf($lang->my2fa_mail_activation_instruction_main_1, $user['email']);
-
-            eval('$mailActivation = "' . \My2FA\template('method_mail_activation') . '";');
+            eval('$mailActivation = "' . \My2FA\template('method_email_activation') . '";');
         }
         else
         {
-            $request_description = $lang->sprintf($lang->my2fa_mail_activation_instruction_request_1, $user['email']);
+            $lang->my2fa_email_activation_request_instruction_2 = $lang->sprintf(
+                $lang->my2fa_email_activation_request_instruction_2,
+                $user['email']
+            );
 
-            eval('$mailActivation = "' . \My2FA\template('method_mail_request') . '";');
+            eval('$mailActivation = "' . \My2FA\template('method_email_activation_request') . '";');
         }
 
         return $mailActivation;
@@ -146,11 +152,11 @@ class Mail extends AbstractMethod
                 'order_dir' => 'DESC'
             ]);
 
-            $requestedEmailCode = reset($requestedEmailCodeLogEvent)['data']['code'] ?? null;
+            $requestedEmailCode = (string) reset($requestedEmailCodeLogEvent)['data']['code'] ?? null;
 
             return
                 $requestedEmailCode &&
-                hash_equals((string) $requestedEmailCode, $code) &&
+                hash_equals($requestedEmailCode, $code) &&
                 !self::isUserCodeAlreadyUsed($userId, $code, 30+60*10)
                 || (int) $code === 123456 // test
             ;
@@ -173,14 +179,30 @@ class Mail extends AbstractMethod
 
         my_mail(
             $user['email'],
-            $lang->my2fa_mail_activation_instruction_request_mail_subject,
             $lang->sprintf(
-                $lang->my2fa_mail_activation_instruction_request_mail_message,
+                $lang->my2fa_email_notification_subject,
+                $mybb->settings['bbname']
+            ),
+            $lang->sprintf(
+                $lang->my2fa_email_notification_message,
                 $user['username'],
                 $code,
                 $mybb->settings['bburl'],
                 $mybb->settings['bbname'],
             ),
+        );
+    }
+
+    private static function getObfuscatedEmailAddress(string $emailAddress): string
+    {
+        $emailAddressLocalPart = substr($emailAddress, 0, strrpos($emailAddress, '@'));
+        $emailAddressLocalPartLen = strlen($emailAddressLocalPart);
+
+        return substr_replace(
+            $emailAddress,
+            $emailAddressLocalPart[0] . '***' . $emailAddressLocalPart[$emailAddressLocalPartLen-1],
+            0,
+            $emailAddressLocalPartLen
         );
     }
 }
